@@ -48,7 +48,7 @@ public class TeleportCommand {
 
         // 确保命令执行者是玩家
         if (!(source.getEntity() instanceof ServerPlayer executor)) {
-            source.sendFailure(Component.literal("只有玩家可以使用此命令"));
+            source.sendFailure(translatableWithFallback("commands.onlytp.only_player"));
             return 0;
         }
 
@@ -58,19 +58,19 @@ public class TeleportCommand {
         // 检查是否尝试传送到自己
         if (executor.equals(targetPlayer) && !executor.hasPermissions(2)) {
             // 如果没有作弊权限，禁止原地TP
-            source.sendFailure(Component.literal("禁止原地TP"));
+            source.sendFailure(translatableWithFallback("commands.onlytp.no_self_tp"));
             return 0;
         }
 
         // 检查目标玩家是否在线并且存活
         if (!targetPlayer.isAlive() || targetPlayer.hasDisconnected()) {
-            source.sendFailure(Component.literal("目标玩家已死亡或已离线"));
+            source.sendFailure(translatableWithFallback("commands.onlytp.target_dead_offline"));
             return 0;
         }
 
         // 检查当前玩家是否在线并且存活
         if (!executor.isAlive() || executor.hasDisconnected()) {
-            source.sendFailure(Component.literal("你已死亡或已离线，无法传送"));
+            source.sendFailure(translatableWithFallback("commands.onlytp.executor_dead_offline"));
             return 0;
         }
 
@@ -99,15 +99,11 @@ public class TeleportCommand {
                 targetPlayer.getXRot()
         );
 
-        source.sendSuccess(
-                () -> Component.literal("已传送到 " + targetPlayer.getGameProfile().getName()),
-                true
-        );
+        // 发送成功消息
+        source.sendSuccess(() -> translatableWithFallback("commands.onlytp.success", targetPlayer.getGameProfile().getName()), true);
 
         // 通知目标玩家有人传送到了他那里
-        targetPlayer.sendSystemMessage(
-                Component.literal(executor.getGameProfile().getName() + " 传送到了你这里")
-        );
+        targetPlayer.sendSystemMessage(translatableWithFallback("commands.onlytp.notify_target", executor.getGameProfile().getName()));
 
         // 在目的地播放下界传送门音效
         targetPlayer.level().playSound(
@@ -148,5 +144,10 @@ public class TeleportCommand {
                     0.1 // 速度因子
             );
         });
+    }
+
+    private static Component translatableWithFallback(String key, Object... args) {
+        String serverText = Component.translatable(key).getString();
+        return Component.translatableWithFallback(key, serverText, args);
     }
 }

@@ -1,0 +1,9 @@
+{
+  "commands.onlytp.only_player": "プレイヤーのみがこのコマンドを使用できます",
+  "commands.onlytp.no_self_tp": "自分自身への瞬間移動は禁止されています",
+  "commands.onlytp.target_dead_offline": "対象プレイヤーが死亡またはオフラインです",
+  "commands.onlytp.executor_dead_offline": "あなたは死亡またはオフラインのため、瞬間移動できません",
+  "commands.onlytp.success": "%s にテレポートしました",
+  "commands.onlytp.notify_target": "%s があなたのところにテレポートしました"
+}
+

@@ -18,8 +18,8 @@ Run the following commands in-game:
 
 - **Minecraft Version**: 1.20.1
 - **Forge Version**: 47.4.0+
-- **Side**: Server-side only. This mod must be installed on the server to function.
-  - Installing on the client has no effect and is not necessary.
+- **Side**: Only server is required, client is optional.
+  - Install on client for localized messages, otherwise server language will be used.
 
 ## License
 

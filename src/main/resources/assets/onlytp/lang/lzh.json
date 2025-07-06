@@ -1,0 +1,8 @@
+{
+  "commands.onlytp.only_player": "此令限乎戲者",
+  "commands.onlytp.no_self_tp": "慎勿自徙",
+  "commands.onlytp.target_dead_offline": "彼身已殁，或形未現",
+  "commands.onlytp.executor_dead_offline": "子身已殁，焉能徙形",
+  "commands.onlytp.success": "已現 %s 之側",
+  "commands.onlytp.notify_target": "%s 已臨君側"
+}
