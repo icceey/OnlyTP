@@ -1,23 +1,25 @@
 # OnlyTP
 
-A Minecraft Forge mod that provides enhanced teleportation functionality.
+A Minecraft Forge mod that provides enhanced teleportation functionality. Easily teleport to your friends to help them.
 
 ## Features
 
-- **Simple Teleportation Commands**: Easy-to-use commands for teleporting players
+- **Simple Commands**: Easy-to-use commands for teleporting players
+- **No Dependencies**: This mod does not require any additional libraries or mods to function
 
 ## Usage
-
-This mod provides teleportation commands that can be used both on client and server environments. The mod includes server-side logic to ensure proper synchronization and security.
 
 Run the following commands in-game:
 - `/tlp <player>`: Teleports you to the specified player.
 
+**Note**: This mod is not recommended for use on PvP servers as it may provide unfair advantages.
+
 ## Compatibility
 
-- **Minecraft Version**: 1.20.1 (check releases for other versions)
-- **Forge Version**: 47.2.0+
-- **Side**: Server
+- **Minecraft Version**: 1.20.1
+- **Forge Version**: 47.4.0+
+- **Side**: Only server is required, client is optional.
+  - Install on client for localized messages, otherwise server language will be used.
 
 ## License
 

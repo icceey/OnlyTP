@@ -1,0 +1,9 @@
+{
+  "commands.onlytp.only_player": "只有玩家可以使用此命令",
+  "commands.onlytp.no_self_tp": "禁止原地TP",
+  "commands.onlytp.target_dead_offline": "目标玩家已死亡或已离线",
+  "commands.onlytp.executor_dead_offline": "你已死亡或已离线，无法传送",
+  "commands.onlytp.success": "已传送到 %s",
+  "commands.onlytp.notify_target": "%s 传送到了你这里"
+}
+

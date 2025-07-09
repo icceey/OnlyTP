@@ -1,0 +1,9 @@
+{
+  "commands.onlytp.only_player": "Only players can use this command",
+  "commands.onlytp.no_self_tp": "Self-teleportation is prohibited",
+  "commands.onlytp.target_dead_offline": "Target player is dead or offline",
+  "commands.onlytp.executor_dead_offline": "You are dead or offline, cannot teleport",
+  "commands.onlytp.success": "Teleported to %s",
+  "commands.onlytp.notify_target": "%s teleported to you"
+}
+
