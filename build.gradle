@@ -197,6 +197,7 @@ task buildForge {
     doLast {
         project.exec {
             commandLine './gradlew', 'clean', 'build', '-PbuildTarget=forge'
+            workingDir project.projectDir
         }
     }
 }
@@ -207,6 +208,7 @@ task buildNeoforge {
     doLast {
         project.exec {
             commandLine './gradlew', 'clean', 'build', '-PbuildTarget=neoforge'
+            workingDir project.projectDir
         }
     }
 }
@@ -214,7 +216,25 @@ task buildNeoforge {
 task buildAll {
     group = 'build'
     description = 'Builds the mod for both Forge and NeoForge'
-    dependsOn buildForge, buildNeoforge
+    doLast {
+        println 'Building for Forge...'
+        project.exec {
+            commandLine './gradlew', 'clean', 'build', '-PbuildTarget=forge'
+            workingDir project.projectDir
+        }
+        
+        println 'Building for NeoForge...'
+        project.exec {
+            commandLine './gradlew', 'clean', 'build', '-PbuildTarget=neoforge'
+            workingDir project.projectDir
+        }
+        
+        println 'Both builds completed!'
+        println 'Artifacts:'
+        fileTree(dir: 'build/libs', include: '*.jar').each { file ->
+            println "  - ${file.name}"
+        }
+    }
 }
 
 publishing {

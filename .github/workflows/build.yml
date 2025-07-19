@@ -1,0 +1,68 @@
+name: Build Multi-Loader
+
+on:
+  push:
+    branches: [ main, forge-1.20.1 ]
+  pull_request:
+    branches: [ main, forge-1.20.1 ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        platform: [forge, neoforge]
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up JDK 17
+      uses: actions/setup-java@v4
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+    
+    - name: Grant execute permission for gradlew
+      run: chmod +x gradlew
+      
+    - name: Grant execute permission for build script
+      run: chmod +x build.sh
+    
+    - name: Build for ${{ matrix.platform }}
+      run: ./gradlew clean build -PbuildTarget=${{ matrix.platform }} --no-daemon
+      
+    - name: Upload ${{ matrix.platform }} artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: onlytp-${{ matrix.platform }}-${{ github.sha }}
+        path: build/libs/*.jar
+        retention-days: 30
+
+  release:
+    if: startsWith(github.ref, 'refs/tags/')
+    needs: build
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up JDK 17
+      uses: actions/setup-java@v4
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+    
+    - name: Grant execute permission for gradlew
+      run: chmod +x gradlew
+      
+    - name: Build all platforms
+      run: |
+        ./gradlew clean build -PbuildTarget=forge --no-daemon
+        ./gradlew build -PbuildTarget=neoforge --no-daemon
+    
+    - name: Create Release
+      uses: softprops/action-gh-release@v1
+      with:
+        files: build/libs/*.jar
+        draft: false
+        prerelease: false
