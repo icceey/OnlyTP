@@ -18,6 +18,7 @@ import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.LivingEntity;
 
 import java.util.stream.IntStream;
 
@@ -78,6 +79,7 @@ public class TeleportCommand {
         // 检查玩家是否正在骑乘生物
         Entity ridingEntity = executor.getVehicle();
         boolean wasRiding = ridingEntity != null;
+        boolean isRidingLivingEntity = ridingEntity instanceof LivingEntity;
 
         // 在原位置播放下界传送门音效
         executor.level().playSound(
@@ -102,8 +104,8 @@ public class TeleportCommand {
         float targetYRot = targetPlayer.getYRot();
         float targetXRot = targetPlayer.getXRot();
 
-        // 如果玩家在骑乘状态，先处理骑乘生物的传送
-        if (wasRiding) {
+        // 如果玩家在骑乘状态且骑乘的是生物，先处理骑乘生物的传送
+        if (wasRiding && isRidingLivingEntity) {
             // 让玩家下马（但保持引用）
             executor.stopRiding();
             
@@ -114,14 +116,14 @@ public class TeleportCommand {
         // 执行玩家传送
         executor.teleportTo(targetLevel, targetX, targetY, targetZ, targetYRot, targetXRot);
 
-        // 如果之前在骑乘状态，重新让玩家骑上生物
-        if (wasRiding && ridingEntity.isAlive()) {
+        // 如果之前在骑乘生物状态，重新让玩家骑上生物
+        if (wasRiding && isRidingLivingEntity && ridingEntity.isAlive()) {
             // 确保骑乘生物在同一个世界且位置正确后，让玩家重新骑上
             executor.startRiding(ridingEntity, true);
         }
 
         // 发送成功消息
-        if (wasRiding && ridingEntity != null && ridingEntity.isAlive()) {
+        if (wasRiding && isRidingLivingEntity && ridingEntity != null && ridingEntity.isAlive()) {
             source.sendSuccess(() -> translatableWithFallback("commands.onlytp.success_with_mount", targetPlayer.getGameProfile().getName()), true);
         } else {
             source.sendSuccess(() -> translatableWithFallback("commands.onlytp.success", targetPlayer.getGameProfile().getName()), true);
