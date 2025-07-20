@@ -17,6 +17,7 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.RandomSource;
+import net.minecraft.world.entity.Entity;
 
 import java.util.stream.IntStream;
 
@@ -74,6 +75,10 @@ public class TeleportCommand {
             return 0;
         }
 
+        // 检查玩家是否正在骑乘生物
+        Entity ridingEntity = executor.getVehicle();
+        boolean wasRiding = ridingEntity != null;
+
         // 在原位置播放下界传送门音效
         executor.level().playSound(
                 null,                    // 发送给所有玩家，无需特定玩家
@@ -89,18 +94,38 @@ public class TeleportCommand {
         // 在出发点生成末影人粒子效果
         spawnTeleportParticles(executor, executor.serverLevel(), ParticleTypes.PORTAL);
 
-        // 执行传送
-        executor.teleportTo(
-                targetPlayer.serverLevel(),
-                targetPlayer.getX(),
-                targetPlayer.getY(),
-                targetPlayer.getZ(),
-                targetPlayer.getYRot(),
-                targetPlayer.getXRot()
-        );
+        // 目标坐标
+        ServerLevel targetLevel = targetPlayer.serverLevel();
+        double targetX = targetPlayer.getX();
+        double targetY = targetPlayer.getY();
+        double targetZ = targetPlayer.getZ();
+        float targetYRot = targetPlayer.getYRot();
+        float targetXRot = targetPlayer.getXRot();
+
+        // 如果玩家在骑乘状态，先处理骑乘生物的传送
+        if (wasRiding) {
+            // 让玩家下马（但保持引用）
+            executor.stopRiding();
+            
+            // 传送骑乘生物到目标位置
+            ridingEntity.teleportTo(targetLevel, targetX, targetY, targetZ, targetYRot, targetXRot);
+        }
+
+        // 执行玩家传送
+        executor.teleportTo(targetLevel, targetX, targetY, targetZ, targetYRot, targetXRot);
+
+        // 如果之前在骑乘状态，重新让玩家骑上生物
+        if (wasRiding && ridingEntity.isAlive()) {
+            // 确保骑乘生物在同一个世界且位置正确后，让玩家重新骑上
+            executor.startRiding(ridingEntity, true);
+        }
 
         // 发送成功消息
-        source.sendSuccess(() -> translatableWithFallback("commands.onlytp.success", targetPlayer.getGameProfile().getName()), true);
+        if (wasRiding && ridingEntity != null && ridingEntity.isAlive()) {
+            source.sendSuccess(() -> translatableWithFallback("commands.onlytp.success_with_mount", targetPlayer.getGameProfile().getName()), true);
+        } else {
+            source.sendSuccess(() -> translatableWithFallback("commands.onlytp.success", targetPlayer.getGameProfile().getName()), true);
+        }
 
         // 通知目标玩家有人传送到了他那里
         targetPlayer.sendSystemMessage(translatableWithFallback("commands.onlytp.notify_target", executor.getGameProfile().getName()));

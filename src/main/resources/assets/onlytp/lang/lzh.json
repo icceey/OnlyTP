@@ -4,5 +4,6 @@
   "commands.onlytp.target_dead_offline": "彼身已殁，或形未現",
   "commands.onlytp.executor_dead_offline": "子身已殁，焉能徙形",
   "commands.onlytp.success": "已現 %s 之側",
+  "commands.onlytp.success_with_mount": "攜座騎而現 %s 之側",
   "commands.onlytp.notify_target": "%s 已臨君側"
 }

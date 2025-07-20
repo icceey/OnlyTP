@@ -4,6 +4,7 @@
   "commands.onlytp.target_dead_offline": "対象プレイヤーが死亡またはオフラインです",
   "commands.onlytp.executor_dead_offline": "あなたは死亡またはオフラインのため、瞬間移動できません",
   "commands.onlytp.success": "%s にテレポートしました",
+  "commands.onlytp.success_with_mount": "乗り物と一緒に %s にテレポートしました",
   "commands.onlytp.notify_target": "%s があなたのところにテレポートしました"
 }
 

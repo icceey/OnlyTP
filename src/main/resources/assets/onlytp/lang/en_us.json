@@ -4,6 +4,7 @@
   "commands.onlytp.target_dead_offline": "Target player is dead or offline",
   "commands.onlytp.executor_dead_offline": "You are dead or offline, cannot teleport",
   "commands.onlytp.success": "Teleported to %s",
+  "commands.onlytp.success_with_mount": "Teleported to %s with your mount",
   "commands.onlytp.notify_target": "%s teleported to you"
 }
 
