@@ -4,7 +4,6 @@
   "commands.onlytp.target_dead_offline": "目標玩家已死亡或已離線",
   "commands.onlytp.executor_dead_offline": "你已死亡或已離線，無法傳送",
   "commands.onlytp.success": "已傳送到 %s",
-  "commands.onlytp.success_with_mount": "已與坐騎一同傳送到 %s",
   "commands.onlytp.notify_target": "%s 傳送到了你這裡"
 }
 
