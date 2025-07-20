@@ -17,6 +17,8 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.RandomSource;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.RelativeMovement;
 
 import java.util.stream.IntStream;
 
@@ -74,6 +76,12 @@ public class TeleportCommand {
             return 0;
         }
 
+        // 检查玩家是否正在骑乘生物
+        LivingEntity livingRidingEntity = null;
+        if (executor.getVehicle() instanceof LivingEntity ridingEntity) {
+            livingRidingEntity = ridingEntity;
+        }
+
         // 在原位置播放下界传送门音效
         executor.level().playSound(
                 null,                    // 发送给所有玩家，无需特定玩家
@@ -89,15 +97,30 @@ public class TeleportCommand {
         // 在出发点生成末影人粒子效果
         spawnTeleportParticles(executor, executor.serverLevel(), ParticleTypes.PORTAL);
 
-        // 执行传送
-        executor.teleportTo(
-                targetPlayer.serverLevel(),
-                targetPlayer.getX(),
-                targetPlayer.getY(),
-                targetPlayer.getZ(),
-                targetPlayer.getYRot(),
-                targetPlayer.getXRot()
-        );
+        // 目标坐标
+        ServerLevel targetLevel = targetPlayer.serverLevel();
+        double targetX = targetPlayer.getX();
+        double targetY = targetPlayer.getY();
+        double targetZ = targetPlayer.getZ();
+        float targetYRot = targetPlayer.getYRot();
+        float targetXRot = targetPlayer.getXRot();
+
+        // 如果玩家在骑乘状态且骑乘的是生物，先处理骑乘生物的传送
+        if (livingRidingEntity != null && livingRidingEntity.isAlive()) {
+            // 让玩家下马（但保持引用）
+            executor.stopRiding();
+
+            // 传送骑乘生物到目标位置
+            livingRidingEntity.teleportTo(targetLevel, targetX, targetY, targetZ, RelativeMovement.ALL, targetYRot, targetXRot);
+        }
+
+        // 执行玩家传送
+        executor.teleportTo(targetLevel, targetX, targetY, targetZ, targetYRot, targetXRot);
+
+        if (livingRidingEntity != null && livingRidingEntity.isAlive()) {
+            // 确保骑乘生物在同一个世界且位置正确后，让玩家重新骑上
+            executor.startRiding(livingRidingEntity, true);
+        }
 
         // 发送成功消息
         source.sendSuccess(() -> translatableWithFallback("commands.onlytp.success", targetPlayer.getGameProfile().getName()), true);
@@ -126,8 +149,8 @@ public class TeleportCommand {
     /**
      * 在玩家周围生成传送粒子效果
      *
-     * @param player 作为粒子生成中心的玩家
-     * @param level 要在其中生成粒子的世界
+     * @param player       作为粒子生成中心的玩家
+     * @param level        要在其中生成粒子的世界
      * @param particleType 要生成的粒子类型
      */
     private static void spawnTeleportParticles(ServerPlayer player, ServerLevel level, ParticleOptions particleType) {
