@@ -8,9 +8,7 @@ OnlyTP is a lightweight Minecraft Forge mod that enhances your gameplay with con
 
 - **🎯 Simple Commands**: Intuitive teleportation with easy-to-remember commands
 - **🌟 Enhanced Experience**: Teleport with elegant particle effects and sound feedback
-- **🔐 Smart Safety Checks**: Prevents teleporting to offline, dead, or disconnected players
 - **⚡ Zero Dependencies**: No additional mods or libraries required - just install and play
-- **🌐 Multiplayer Ready**: Perfect for collaborative gameplay and server environments
 
 ## 🎮 Usage
 
@@ -21,7 +19,6 @@ OnlyTP is a lightweight Minecraft Forge mod that enhances your gameplay with con
 - **Particle Effects**: Beautiful portal particles appear at both departure and arrival locations
 - **Sound Feedback**: Immersive portal sounds enhance the teleportation experience  
 - **Player Notifications**: Both teleporter and target receive clear status messages
-- **Safety First**: Only allows teleporting to living, online players
 
 ### 🔒 Safety Note
 This mod is not recommended for competitive PvP servers as it may provide tactical advantages to players.
@@ -37,7 +34,3 @@ This mod is not recommended for competitive PvP servers as it may provide tactic
 ## 📄 License
 
 This project is licensed under the MIT License - see the [LICENSE.txt](LICENSE.txt) file for details.
-
----
-
-*Made with ❤️ for the Minecraft community*
