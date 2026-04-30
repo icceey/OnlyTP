@@ -17,9 +17,14 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.RandomSource;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.RelativeMovement;
+import net.minecraft.world.level.portal.PortalInfo;
+import net.minecraft.world.phys.Vec3;
+import net.minecraftforge.common.util.ITeleporter;
 
+import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.IntStream;
 
 public class TeleportCommand {
@@ -105,21 +110,29 @@ public class TeleportCommand {
         float targetYRot = targetPlayer.getYRot();
         float targetXRot = targetPlayer.getXRot();
 
-        // 如果玩家在骑乘状态且骑乘的是生物，先处理骑乘生物的传送
+        LivingEntity teleportedRidingEntity = null;
         if (livingRidingEntity != null && livingRidingEntity.isAlive()) {
-            // 让玩家下马（但保持引用）
+            // 让玩家下马，再传送坐骑并保留可重新骑乘的实体引用
             executor.stopRiding();
 
             // 传送骑乘生物到目标位置
-            livingRidingEntity.teleportTo(targetLevel, targetX, targetY, targetZ, RelativeMovement.ALL, targetYRot, targetXRot);
+            teleportedRidingEntity = teleportRidingEntity(
+                    livingRidingEntity,
+                    targetLevel,
+                    targetX,
+                    targetY,
+                    targetZ,
+                    targetYRot,
+                    targetXRot
+            );
         }
 
         // 执行玩家传送
         executor.teleportTo(targetLevel, targetX, targetY, targetZ, targetYRot, targetXRot);
 
-        if (livingRidingEntity != null && livingRidingEntity.isAlive()) {
+        if (teleportedRidingEntity != null && teleportedRidingEntity.isAlive()) {
             // 确保骑乘生物在同一个世界且位置正确后，让玩家重新骑上
-            executor.startRiding(livingRidingEntity, true);
+            executor.startRiding(teleportedRidingEntity, true);
         }
 
         // 发送成功消息
@@ -167,6 +180,57 @@ public class TeleportCommand {
                     0.1 // 速度因子
             );
         });
+    }
+
+    private static LivingEntity teleportRidingEntity(LivingEntity ridingEntity, ServerLevel targetLevel,
+                                                    double targetX, double targetY, double targetZ,
+                                                    float targetYRot, float targetXRot) {
+        if (ridingEntity.level() == targetLevel) {
+            boolean teleported = ridingEntity.teleportTo(
+                    targetLevel,
+                    targetX,
+                    targetY,
+                    targetZ,
+                    Set.of(),
+                    targetYRot,
+                    targetXRot
+            );
+            return teleported ? ridingEntity : null;
+        }
+
+        Entity teleportedEntity = ridingEntity.changeDimension(
+                targetLevel,
+                new DirectEntityTeleporter(
+                        targetX,
+                        targetY,
+                        targetZ,
+                        targetYRot,
+                        targetXRot,
+                        ridingEntity.getDeltaMovement()
+                )
+        );
+        return teleportedEntity instanceof LivingEntity teleportedLivingEntity ? teleportedLivingEntity : null;
+    }
+
+    private record DirectEntityTeleporter(double x, double y, double z, float yRot, float xRot,
+                                          Vec3 deltaMovement) implements ITeleporter {
+        @Override
+        public PortalInfo getPortalInfo(Entity entity, ServerLevel targetLevel,
+                                        Function<ServerLevel, PortalInfo> defaultPortalInfo) {
+            return new PortalInfo(new Vec3(x, y, z), deltaMovement, yRot, xRot);
+        }
+
+        @Override
+        public Entity placeEntity(Entity entity, ServerLevel currentLevel, ServerLevel targetLevel, float yaw,
+                                  Function<Boolean, Entity> repositionEntity) {
+            Entity teleportedEntity = repositionEntity.apply(false);
+            if (teleportedEntity != null) {
+                teleportedEntity.moveTo(x, y, z, yRot, xRot);
+                teleportedEntity.setDeltaMovement(deltaMovement);
+                teleportedEntity.setYHeadRot(yRot);
+            }
+            return teleportedEntity;
+        }
     }
 
     private static Component translatableWithFallback(String key, Object... args) {
