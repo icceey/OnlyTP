@@ -15,12 +15,16 @@ class TeleportCommandSourceTest {
         String source = Files.readString(Path.of("src/main/java/com/icceey/onlytp/command/TeleportCommand.java"));
 
         assertTrue(
-                source.matches("(?s).*\\.changeDimension\\s*\\(\\s*targetLevel\\s*,.*"),
-                "Cross-dimension riding entity teleport must use Forge's returned replacement entity"
+                source.matches("(?s).*\\.changeDimension\\s*\\(\\s*new\\s+DimensionTransition\\s*\\(\\s*targetLevel\\s*,.*"),
+                "Cross-dimension riding entity teleport must use NeoForge/Minecraft's returned replacement entity"
         );
         assertFalse(
                 source.contains("startRiding(livingRidingEntity"),
                 "Player must not remount the stale pre-dimension-change riding entity reference"
+        );
+        assertFalse(
+                source.contains("net.minecraftforge"),
+                "NeoForge port must not keep Forge API imports"
         );
     }
 }

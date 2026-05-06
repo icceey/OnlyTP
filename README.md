@@ -2,7 +2,7 @@
 
 [English](README.md) | [中文](README_zh.md)
 
-OnlyTP is a lightweight Minecraft Forge mod that enhances your gameplay with convenient teleportation features. Whether you're exploring vast worlds or helping friends in need, OnlyTP makes traveling across your Minecraft server simple and efficient.
+OnlyTP is a lightweight Minecraft NeoForge mod that enhances your gameplay with convenient teleportation features. Whether you're exploring vast worlds or helping friends in need, OnlyTP makes traveling across your Minecraft server simple and efficient.
 
 ## ✨ Features
 
@@ -25,8 +25,8 @@ This mod is not recommended for competitive PvP servers as it may provide tactic
 
 ## 🔧 Compatibility
 
-- **Minecraft Version**: 1.20.1
-- **Forge Version**: 47.4.16+
+- **Minecraft Version**: 1.21.1
+- **NeoForge Version**: 21.1.228+
 - **Installation**: Server-side required, client-side optional
   - Install on client for localized messages
   - Server-only installation uses server language for all players

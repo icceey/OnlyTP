@@ -2,10 +2,10 @@ package com.icceey.onlytp;
 
 import com.icceey.onlytp.command.TeleportCommand;
 import com.mojang.logging.LogUtils;
-import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.event.RegisterCommandsEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.Mod;
+import net.neoforged.neoforge.common.NeoForge;
+import net.neoforged.neoforge.event.RegisterCommandsEvent;
 import org.slf4j.Logger;
 
 @Mod(OnlyTP.MODID)
@@ -14,7 +14,7 @@ public class OnlyTP {
     private static final Logger LOGGER = LogUtils.getLogger();
 
     public OnlyTP() {
-        MinecraftForge.EVENT_BUS.register(this);
+        NeoForge.EVENT_BUS.register(this);
         LOGGER.info("OnlyTP mod loaded!");
     }
 

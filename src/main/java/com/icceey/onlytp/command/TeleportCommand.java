@@ -19,12 +19,10 @@ import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.level.portal.PortalInfo;
+import net.minecraft.world.level.portal.DimensionTransition;
 import net.minecraft.world.phys.Vec3;
-import net.minecraftforge.common.util.ITeleporter;
 
 import java.util.Set;
-import java.util.function.Function;
 import java.util.stream.IntStream;
 
 public class TeleportCommand {
@@ -198,39 +196,18 @@ public class TeleportCommand {
             return teleported ? ridingEntity : null;
         }
 
-        Entity teleportedEntity = ridingEntity.changeDimension(
+        Entity teleportedEntity = ridingEntity.changeDimension(new DimensionTransition(
                 targetLevel,
-                new DirectEntityTeleporter(
-                        targetX,
-                        targetY,
-                        targetZ,
-                        targetYRot,
-                        targetXRot,
-                        ridingEntity.getDeltaMovement()
-                )
-        );
+                new Vec3(targetX, targetY, targetZ),
+                ridingEntity.getDeltaMovement(),
+                targetYRot,
+                targetXRot,
+                DimensionTransition.DO_NOTHING
+        ));
+        if (teleportedEntity != null) {
+            teleportedEntity.setYHeadRot(targetYRot);
+        }
         return teleportedEntity instanceof LivingEntity teleportedLivingEntity ? teleportedLivingEntity : null;
-    }
-
-    private record DirectEntityTeleporter(double x, double y, double z, float yRot, float xRot,
-                                          Vec3 deltaMovement) implements ITeleporter {
-        @Override
-        public PortalInfo getPortalInfo(Entity entity, ServerLevel targetLevel,
-                                        Function<ServerLevel, PortalInfo> defaultPortalInfo) {
-            return new PortalInfo(new Vec3(x, y, z), deltaMovement, yRot, xRot);
-        }
-
-        @Override
-        public Entity placeEntity(Entity entity, ServerLevel currentLevel, ServerLevel targetLevel, float yaw,
-                                  Function<Boolean, Entity> repositionEntity) {
-            Entity teleportedEntity = repositionEntity.apply(false);
-            if (teleportedEntity != null) {
-                teleportedEntity.moveTo(x, y, z, yRot, xRot);
-                teleportedEntity.setDeltaMovement(deltaMovement);
-                teleportedEntity.setYHeadRot(yRot);
-            }
-            return teleportedEntity;
-        }
     }
 
     private static Component translatableWithFallback(String key, Object... args) {
