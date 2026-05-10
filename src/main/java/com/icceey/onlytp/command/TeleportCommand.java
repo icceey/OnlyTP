@@ -1,6 +1,7 @@
 package com.icceey.onlytp.command;
 
-import com.mojang.authlib.GameProfile;
+import com.icceey.onlytp.compat.MinecraftCompat;
+import com.icceey.onlytp.compat.MinecraftCompatImpl;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
@@ -19,13 +20,11 @@ import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.level.portal.DimensionTransition;
-import net.minecraft.world.phys.Vec3;
 
-import java.util.Set;
 import java.util.stream.IntStream;
 
 public class TeleportCommand {
+    private static final MinecraftCompat COMPAT = new MinecraftCompatImpl();
 
     public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
         dispatcher.register(Commands.literal("tlp")
@@ -42,8 +41,7 @@ public class TeleportCommand {
                 return SharedSuggestionProvider.suggest(
                         context.getSource().getServer().getPlayerList().getPlayers().stream()
                                 .filter(player -> !player.equals(context.getSource().getEntity()))
-                                .map(ServerPlayer::getGameProfile)
-                                .map(GameProfile::getName),
+                                .map(ServerPlayer::getScoreboardName),
                         builder
                 );
             };
@@ -61,7 +59,7 @@ public class TeleportCommand {
         ServerPlayer targetPlayer = EntityArgument.getPlayer(context, "player");
 
         // 检查是否尝试传送到自己
-        if (executor.equals(targetPlayer) && !executor.hasPermissions(2)) {
+        if (executor.equals(targetPlayer) && !COMPAT.hasPermissionLevel(source, executor, 2)) {
             // 如果没有作弊权限，禁止原地TP
             source.sendFailure(translatableWithFallback("commands.onlytp.no_self_tp"));
             return 0;
@@ -98,10 +96,10 @@ public class TeleportCommand {
         );
 
         // 在出发点生成末影人粒子效果
-        spawnTeleportParticles(executor, executor.serverLevel(), ParticleTypes.PORTAL);
+        spawnTeleportParticles(executor, (ServerLevel) executor.level(), ParticleTypes.PORTAL);
 
         // 目标坐标
-        ServerLevel targetLevel = targetPlayer.serverLevel();
+        ServerLevel targetLevel = (ServerLevel) targetPlayer.level();
         double targetX = targetPlayer.getX();
         double targetY = targetPlayer.getY();
         double targetZ = targetPlayer.getZ();
@@ -126,18 +124,18 @@ public class TeleportCommand {
         }
 
         // 执行玩家传送
-        executor.teleportTo(targetLevel, targetX, targetY, targetZ, targetYRot, targetXRot);
+        COMPAT.teleportEntityTo(executor, targetLevel, targetX, targetY, targetZ, targetYRot, targetXRot, false);
 
         if (teleportedRidingEntity != null && teleportedRidingEntity.isAlive()) {
             // 确保骑乘生物在同一个世界且位置正确后，让玩家重新骑上
-            executor.startRiding(teleportedRidingEntity, true);
+            COMPAT.startRiding(executor, teleportedRidingEntity);
         }
 
         // 发送成功消息
-        source.sendSuccess(() -> translatableWithFallback("commands.onlytp.success", targetPlayer.getGameProfile().getName()), true);
+        source.sendSuccess(() -> translatableWithFallback("commands.onlytp.success", targetPlayer.getScoreboardName()), true);
 
         // 通知目标玩家有人传送到了他那里
-        targetPlayer.sendSystemMessage(translatableWithFallback("commands.onlytp.notify_target", executor.getGameProfile().getName()));
+        targetPlayer.sendSystemMessage(translatableWithFallback("commands.onlytp.notify_target", executor.getScoreboardName()));
 
         // 在目的地播放下界传送门音效
         targetPlayer.level().playSound(
@@ -152,7 +150,7 @@ public class TeleportCommand {
         );
 
         // 在目的地生成末影人粒子效果
-        spawnTeleportParticles(targetPlayer, targetPlayer.serverLevel(), ParticleTypes.REVERSE_PORTAL);
+        spawnTeleportParticles(targetPlayer, (ServerLevel) targetPlayer.level(), ParticleTypes.REVERSE_PORTAL);
 
         return 1;
     }
@@ -184,26 +182,28 @@ public class TeleportCommand {
                                                     double targetX, double targetY, double targetZ,
                                                     float targetYRot, float targetXRot) {
         if (ridingEntity.level() == targetLevel) {
-            boolean teleported = ridingEntity.teleportTo(
+            boolean teleported = COMPAT.teleportEntityTo(
+                    ridingEntity,
                     targetLevel,
                     targetX,
                     targetY,
                     targetZ,
-                    Set.of(),
                     targetYRot,
-                    targetXRot
+                    targetXRot,
+                    false
             );
             return teleported ? ridingEntity : null;
         }
 
-        Entity teleportedEntity = ridingEntity.changeDimension(new DimensionTransition(
+        Entity teleportedEntity = COMPAT.teleportAcrossDimensions(
+                ridingEntity,
                 targetLevel,
-                new Vec3(targetX, targetY, targetZ),
-                ridingEntity.getDeltaMovement(),
+                targetX,
+                targetY,
+                targetZ,
                 targetYRot,
-                targetXRot,
-                DimensionTransition.DO_NOTHING
-        ));
+                targetXRot
+        );
         if (teleportedEntity != null) {
             teleportedEntity.setYHeadRot(targetYRot);
         }

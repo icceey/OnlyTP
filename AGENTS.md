@@ -2,10 +2,10 @@
 
 ## Project Overview
 
-OnlyTP is a minimal Minecraft NeoForge mod for Minecraft 1.21.1 and NeoForge
-21.1.228+. It adds one command, `/tlp <player>`, allowing a player to teleport
-to another online player with portal particles, portal sound feedback, target
-notifications, and riding-entity preservation.
+OnlyTP is a minimal Minecraft NeoForge mod for the Minecraft 1.21 series. It
+adds one command, `/tlp <player>`, allowing a player to teleport to another
+online player with portal particles, portal sound feedback, target notifications,
+and riding-entity preservation.
 
 This project no longer supports Forge. Do not add ForgeGradle, `net.minecraftforge`
 imports, `META-INF/mods.toml`, `pack.mcmeta`, or Forge version properties back
@@ -14,11 +14,13 @@ into the project.
 ## Current Stack
 
 - Loader/build: NeoForge via `net.neoforged.moddev`
-- Minecraft: `1.21.1`
-- NeoForge: `21.1.228+`
+- Default local development target: Minecraft `1.21.1` and NeoForge `21.1.228+`
+- CI/release matrix: Minecraft `1.21` through `1.21.11` with matching NeoForge
+  `21.x` builds
 - Java: 21, enforced by `.java-version` and Gradle toolchains
 - Gradle wrapper: Gradle 9.2.1
-- Mappings: Parchment for Minecraft 1.21.1
+- Mappings: Parchment for Minecraft 1.21.1 by default; matrix builds can
+  override or disable Parchment when a target has no Parchment release
 
 `gradle.properties` is the single source of truth for `mod_id`, `mod_version`,
 `minecraft_version`, and `neo_version`. Keep `mod_id=onlytp` synchronized with
@@ -26,13 +28,30 @@ into the project.
 
 ## Source Layout
 
-The mod has two Java source files:
+Common Java sources live under `src/main/java`:
 
 - `src/main/java/com/icceey/onlytp/OnlyTP.java` - NeoForge mod entry point.
   It registers `NeoForge.EVENT_BUS` listeners and command registration through
   `RegisterCommandsEvent`.
 - `src/main/java/com/icceey/onlytp/command/TeleportCommand.java` - full
   Brigadier command implementation for `/tlp <player>`.
+- `src/main/java/com/icceey/onlytp/compat/MinecraftCompat.java` - compatibility
+  interface used by the command logic.
+
+Version-specific Minecraft API calls live outside `src/main/java` and are
+selected by `minecraft_version` in `build.gradle`:
+
+- `src/compat_1_21_1/java/` - Minecraft `1.21` and `1.21.1`
+- `src/compat_1_21_2/java/` - Minecraft `1.21.2` through `1.21.8`
+- `src/compat_1_21_9/java/` - Minecraft `1.21.9` and `1.21.10`
+- `src/compat_1_21_11/java/` - Minecraft `1.21.11` and newer `1.21.x`
+  patches by default
+
+Keep `TeleportCommand` free of reflection and version-branch details. Add or
+adjust a compat source directory when Minecraft changes these command,
+teleport, permission, or riding APIs again. The build intentionally treats
+future `1.21.x` patches optimistically: they reuse the latest known compat layer
+until compilation or runtime testing proves an API break.
 
 Resources follow the NeoForge MDK layout:
 
@@ -59,6 +78,9 @@ Use a fresh shell in the repository so jenv picks up `.java-version=21`.
 ```text
 build/libs/onlytp-neoforge-1.21.1-<version>.jar
 ```
+
+Matrix builds replace `1.21.1` with the target Minecraft version in the jar
+name.
 
 The `run/` directory is a local game working directory. Do not commit worlds,
 logs, or runtime-generated game files.
@@ -115,12 +137,32 @@ Useful focused checks:
 
 ```bash
 rg -n "net\\.minecraftforge|MinecraftForge|ForgeGradle|META-INF/mods\\.toml|pack\\.mcmeta|1\\.20\\.1|47\\." -g '!build/**' -g '!run/**'
-jar tf build/libs/onlytp-neoforge-1.21.1-*.jar | sort
+jar tf build/libs/onlytp-neoforge-*.jar | sort
 ```
 
 The source-level regression test in `TeleportCommandSourceTest` intentionally
 checks that Forge imports are absent and that cross-dimension riding-entity
 teleporting uses the returned NeoForge/Minecraft replacement entity path.
+
+## Runtime Testing Skill
+
+When a change needs real in-game validation, first check whether the local
+runtime testing skill is available at:
+
+```text
+~/.agents/skills/test-minecraft-mod-runtime/SKILL.md
+```
+
+If that skill is available, use it for singleplayer, multiplayer, Computer Use,
+input-source handling, and Minecraft `1.21.x` matrix runtime testing. If it is
+not available, ignore this note and continue with the smallest practical manual
+verification for the requested change; do not fail a task only because the skill
+is missing.
+
+For OnlyTP-specific runtime checks, use `/tlp Alice` for singleplayer
+self-teleport and `/tlp Bob` from Alice for two-client multiplayer checks. For
+the riding path, create a mount in-game, ride it, then run the teleport command
+and verify the player remains mounted.
 
 ## Maintenance Notes
 

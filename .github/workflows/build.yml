@@ -5,6 +5,58 @@ on: [push, pull_request]
 jobs:
   build:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - minecraft: "1.21"
+            neoforge: "21.0.167"
+            parchment_minecraft: "1.21"
+            parchment_mappings: "2024.11.10"
+          - minecraft: "1.21.1"
+            neoforge: "21.1.228"
+            parchment_minecraft: "1.21.1"
+            parchment_mappings: "2024.11.17"
+          - minecraft: "1.21.2"
+            neoforge: "21.2.1-beta"
+            parchment_minecraft: ""
+            parchment_mappings: ""
+          - minecraft: "1.21.3"
+            neoforge: "21.3.96"
+            parchment_minecraft: "1.21.3"
+            parchment_mappings: "2024.12.07"
+          - minecraft: "1.21.4"
+            neoforge: "21.4.157"
+            parchment_minecraft: "1.21.4"
+            parchment_mappings: "2025.03.23"
+          - minecraft: "1.21.5"
+            neoforge: "21.5.97"
+            parchment_minecraft: "1.21.5"
+            parchment_mappings: "2025.06.15"
+          - minecraft: "1.21.6"
+            neoforge: "21.6.20-beta"
+            parchment_minecraft: "1.21.6"
+            parchment_mappings: "2025.06.29"
+          - minecraft: "1.21.7"
+            neoforge: "21.7.25-beta"
+            parchment_minecraft: "1.21.7"
+            parchment_mappings: "2025.07.18"
+          - minecraft: "1.21.8"
+            neoforge: "21.8.53"
+            parchment_minecraft: "1.21.8"
+            parchment_mappings: "2025.09.14"
+          - minecraft: "1.21.9"
+            neoforge: "21.9.16-beta"
+            parchment_minecraft: "1.21.9"
+            parchment_mappings: "2025.10.05"
+          - minecraft: "1.21.10"
+            neoforge: "21.10.64"
+            parchment_minecraft: "1.21.10"
+            parchment_mappings: "2025.10.12"
+          - minecraft: "1.21.11"
+            neoforge: "21.11.42"
+            parchment_minecraft: "1.21.11"
+            parchment_mappings: "2025.12.20"
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
@@ -21,5 +73,11 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v6
 
-      - name: Build with Gradle
-        run: ./gradlew build
+      - name: Build Minecraft ${{ matrix.minecraft }}
+        run: >
+          ./gradlew build --no-daemon --no-configuration-cache --warning-mode all
+          -Pminecraft_version=${{ matrix.minecraft }}
+          -Pminecraft_version_range='[${{ matrix.minecraft }}]'
+          -Pneo_version=${{ matrix.neoforge }}
+          -Pparchment_minecraft_version=${{ matrix.parchment_minecraft }}
+          -Pparchment_mappings_version=${{ matrix.parchment_mappings }}

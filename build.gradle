@@ -12,6 +12,35 @@ tasks.named('wrapper', Wrapper).configure {
 version = mod_version
 group = mod_group_id
 
+def parchmentMinecraftVersion = providers.gradleProperty('parchment_minecraft_version').orElse('').get().trim()
+def parchmentMappingsVersion = providers.gradleProperty('parchment_mappings_version').orElse('').get().trim()
+def targetMinecraftVersion = providers.gradleProperty('minecraft_version').get()
+def parseMinecraftVersion = { String version ->
+    def parts = version.tokenize('.')
+    if (parts.size() < 2 || parts.size() > 3 || !parts.every { it ==~ /\d+/ }) {
+        throw new GradleException("Unsupported Minecraft compatibility target: ${version}")
+    }
+    parts.collect { it as int }
+}
+def targetMinecraftVersionParts = parseMinecraftVersion(targetMinecraftVersion)
+if (!(targetMinecraftVersionParts[0] == 1 && targetMinecraftVersionParts[1] == 21)) {
+    throw new GradleException("Unsupported Minecraft compatibility target: ${targetMinecraftVersion}")
+}
+def minecraftPatchVersion = targetMinecraftVersionParts.size() == 3 ? targetMinecraftVersionParts[2] : 0
+def compatSourceDir
+if (minecraftPatchVersion <= 1) {
+    compatSourceDir = 'src/compat_1_21_1/java'
+} else if (minecraftPatchVersion <= 8) {
+    compatSourceDir = 'src/compat_1_21_2/java'
+} else if (minecraftPatchVersion <= 10) {
+    compatSourceDir = 'src/compat_1_21_9/java'
+} else if (minecraftPatchVersion >= 11) {
+    // Be optimistic for future 1.21 patches; add a new layer only when compilation proves an API break.
+    compatSourceDir = 'src/compat_1_21_11/java'
+}
+
+sourceSets.main.java.srcDir(compatSourceDir)
+
 sourceSets.main.resources {
     srcDir('src/generated/resources')
 
@@ -32,9 +61,11 @@ java.toolchain.languageVersion = JavaLanguageVersion.of(21)
 neoForge {
     version = project.neo_version
 
-    parchment {
-        mappingsVersion = project.parchment_mappings_version
-        minecraftVersion = project.parchment_minecraft_version
+    if (!parchmentMinecraftVersion.isEmpty() && !parchmentMappingsVersion.isEmpty()) {
+        parchment {
+            mappingsVersion = parchmentMappingsVersion
+            minecraftVersion = parchmentMinecraftVersion
+        }
     }
 
     runs {
