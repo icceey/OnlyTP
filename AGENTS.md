@@ -14,7 +14,7 @@ into the project.
 ## Current Stack
 
 - Loader/build: NeoForge via `net.neoforged.moddev`
-- Default local development target: Minecraft `1.21.1` and NeoForge `21.1.228+`
+- Default local development target: Minecraft `1.21.1` and NeoForge `21.1.242+`
 - CI/release matrix: Minecraft `1.21` through `1.21.11` with matching NeoForge
   `21.x` builds
 - Java: 21, enforced by `.java-version` and Gradle toolchains
