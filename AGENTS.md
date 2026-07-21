@@ -2,10 +2,10 @@
 
 ## Project Overview
 
-OnlyTP is a minimal Minecraft NeoForge mod for the Minecraft 1.21 series. It
-adds one command, `/tlp <player>`, allowing a player to teleport to another
-online player with portal particles, portal sound feedback, target notifications,
-and riding-entity preservation.
+OnlyTP is a minimal Minecraft NeoForge mod for the Minecraft 1.21 series and
+Minecraft 26.x. It adds one command, `/tlp <player>`, allowing a player to
+teleport to another online player with portal particles, portal sound feedback,
+target notifications, and riding-entity preservation.
 
 This project no longer supports Forge. Do not add ForgeGradle, `net.minecraftforge`
 imports, `META-INF/mods.toml`, `pack.mcmeta`, or Forge version properties back
@@ -15,9 +15,11 @@ into the project.
 
 - Loader/build: NeoForge via `net.neoforged.moddev`
 - Default local development target: Minecraft `1.21.1` and NeoForge `21.1.242+`
-- CI/release matrix: Minecraft `1.21` through `1.21.11` with matching NeoForge
-  `21.x` builds
-- Java: 21, enforced by `.java-version` and Gradle toolchains
+- CI/release matrix: Minecraft `1.21` through `1.21.11` and `26.1` through
+  `26.2`, with matching NeoForge builds
+- Java: 21 for Minecraft 1.21.x and 25 for Minecraft 26.x; `.java-version`
+  keeps the default 1.21.1 workspace on Java 21, while Gradle toolchains select
+  the target-specific JDK
 - Gradle wrapper: Gradle 9.2.1
 - Mappings: Parchment for Minecraft 1.21.1 by default; matrix builds can
   override or disable Parchment when a target has no Parchment release
@@ -46,12 +48,15 @@ selected by `minecraft_version` in `build.gradle`:
 - `src/compat_1_21_9/java/` - Minecraft `1.21.9` and `1.21.10`
 - `src/compat_1_21_11/java/` - Minecraft `1.21.11` and newer `1.21.x`
   patches by default
+- `src/compat_26_1/java/` - Minecraft `26.1` and newer `26.x` releases by
+  default
 
 Keep `TeleportCommand` free of reflection and version-branch details. Add or
 adjust a compat source directory when Minecraft changes these command,
 teleport, permission, or riding APIs again. The build intentionally treats
-future `1.21.x` patches optimistically: they reuse the latest known compat layer
-until compilation or runtime testing proves an API break.
+future patches in each supported version line optimistically: they reuse the
+latest known compat layer until compilation or runtime testing proves an API
+break.
 
 Resources follow the NeoForge MDK layout:
 
@@ -64,7 +69,9 @@ keeps loader metadata under `src/main/templates/META-INF/`.
 
 ## Build And Run
 
-Use a fresh shell in the repository so jenv picks up `.java-version=21`.
+Use a fresh shell in the repository so jenv picks up `.java-version=21` for the
+default Minecraft 1.21.1 target. Gradle selects or downloads Java 25 when a
+Minecraft 26.x target is requested.
 
 ```bash
 ./gradlew build
@@ -99,9 +106,9 @@ feature change:
 - Destination particles use `ParticleTypes.REVERSE_PORTAL`.
 - If the executor is riding a `LivingEntity`, dismount, teleport the mount,
   teleport the player, then remount the returned teleported mount entity.
-- Cross-dimension mount teleporting uses `DimensionTransition` and remounts the
-  replacement entity returned by `changeDimension(...)`, not the stale
-  pre-teleport entity reference.
+- Cross-dimension mount teleporting uses the version-appropriate transition API
+  and remounts the replacement entity returned by the teleport operation, not
+  the stale pre-teleport entity reference.
 
 ## Internationalization
 
@@ -154,10 +161,10 @@ runtime testing skill is available at:
 ```
 
 If that skill is available, use it for singleplayer, multiplayer, Computer Use,
-input-source handling, and Minecraft `1.21.x` matrix runtime testing. If it is
-not available, ignore this note and continue with the smallest practical manual
-verification for the requested change; do not fail a task only because the skill
-is missing.
+input-source handling, and Minecraft `1.21.x`/`26.x` matrix runtime testing. If
+it is not available, ignore this note and continue with the smallest practical
+manual verification for the requested change; do not fail a task only because
+the skill is missing.
 
 For OnlyTP-specific runtime checks, use `/tlp Alice` for singleplayer
 self-teleport and `/tlp Bob` from Alice for two-client multiplayer checks. For
@@ -166,7 +173,8 @@ and verify the player remains mounted.
 
 ## Maintenance Notes
 
-- Keep GitHub Actions on JDK 21.
+- Keep GitHub Actions on JDK 21 for Minecraft 1.21.x and JDK 25 for Minecraft
+  26.x.
 - Keep Dependabot scoped to GitHub Actions updates unless the user asks for a
   broader ecosystem.
 - The `forge.logging.markers` run property in `build.gradle` comes from the

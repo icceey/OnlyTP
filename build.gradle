@@ -23,12 +23,17 @@ def parseMinecraftVersion = { String version ->
     parts.collect { it as int }
 }
 def targetMinecraftVersionParts = parseMinecraftVersion(targetMinecraftVersion)
-if (!(targetMinecraftVersionParts[0] == 1 && targetMinecraftVersionParts[1] == 21)) {
+def isMinecraft121 = targetMinecraftVersionParts[0] == 1 && targetMinecraftVersionParts[1] == 21
+def isMinecraft26 = targetMinecraftVersionParts[0] == 26
+if (!(isMinecraft121 || isMinecraft26)) {
     throw new GradleException("Unsupported Minecraft compatibility target: ${targetMinecraftVersion}")
 }
 def minecraftPatchVersion = targetMinecraftVersionParts.size() == 3 ? targetMinecraftVersionParts[2] : 0
 def compatSourceDir
-if (minecraftPatchVersion <= 1) {
+if (isMinecraft26) {
+    // Reuse the latest known 26.x layer until compilation proves an API break.
+    compatSourceDir = 'src/compat_26_1/java'
+} else if (minecraftPatchVersion <= 1) {
     compatSourceDir = 'src/compat_1_21_1/java'
 } else if (minecraftPatchVersion <= 8) {
     compatSourceDir = 'src/compat_1_21_2/java'
@@ -40,6 +45,8 @@ if (minecraftPatchVersion <= 1) {
 }
 
 sourceSets.main.java.srcDir(compatSourceDir)
+
+def targetJavaVersion = isMinecraft26 ? 25 : 21
 
 sourceSets.main.resources {
     srcDir('src/generated/resources')
@@ -56,7 +63,7 @@ base {
     archivesName = "${mod_id}-neoforge-${minecraft_version}"
 }
 
-java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+java.toolchain.languageVersion = JavaLanguageVersion.of(targetJavaVersion)
 
 neoForge {
     version = project.neo_version

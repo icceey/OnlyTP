@@ -25,8 +25,9 @@ This mod is not recommended for competitive PvP servers as it may provide tactic
 
 ## 🔧 Compatibility
 
-- **Minecraft Versions**: 1.21 through 1.21.11
-- **Loader**: NeoForge, using the matching `21.x` build for each Minecraft version
+- **Minecraft Versions**: 1.21 through 1.21.11, plus 26.1 through 26.2
+- **Loader**: NeoForge, using the matching `21.x` or `26.x` build for each Minecraft version
+- **Java**: Java 21 for Minecraft 1.21.x; Java 25 for Minecraft 26.x
 - **Installation**: Server-side required, client-side optional
   - Install on client for localized messages
   - Server-only installation uses server language for all players
