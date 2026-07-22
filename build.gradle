@@ -1,24 +1,18 @@
 plugins {
-    id 'java-library'
-    id 'maven-publish'
-    id 'net.neoforged.moddev' version '2.0.142'
-    id 'idea'
-}
-
-tasks.named('wrapper', Wrapper).configure {
-    distributionType = Wrapper.DistributionType.BIN
+    id 'java'
+    id 'net.neoforged.moddev' version '2.0.142' apply false
+    id 'net.fabricmc.fabric-loom-remap' version '1.15.5' apply false
+    id 'net.fabricmc.fabric-loom' version '1.15.5' apply false
 }
 
 version = mod_version
 group = mod_group_id
 
-def parchmentMinecraftVersion = providers.gradleProperty('parchment_minecraft_version').orElse('').get().trim()
-def parchmentMappingsVersion = providers.gradleProperty('parchment_mappings_version').orElse('').get().trim()
 def targetMinecraftVersion = providers.gradleProperty('minecraft_version').get()
-def parseMinecraftVersion = { String version ->
-    def parts = version.tokenize('.')
+def parseMinecraftVersion = { String value ->
+    def parts = value.tokenize('.')
     if (parts.size() < 2 || parts.size() > 3 || !parts.every { it ==~ /\d+/ }) {
-        throw new GradleException("Unsupported Minecraft compatibility target: ${version}")
+        throw new GradleException("Unsupported Minecraft compatibility target: ${value}")
     }
     parts.collect { it as int }
 }
@@ -28,90 +22,38 @@ def isMinecraft26 = targetMinecraftVersionParts[0] == 26
 if (!(isMinecraft121 || isMinecraft26)) {
     throw new GradleException("Unsupported Minecraft compatibility target: ${targetMinecraftVersion}")
 }
+
 def minecraftPatchVersion = targetMinecraftVersionParts.size() == 3 ? targetMinecraftVersionParts[2] : 0
-def compatSourceDir
+def compatSourceSet
 if (isMinecraft26) {
     // Reuse the latest known 26.x layer until compilation proves an API break.
-    compatSourceDir = 'src/compat_26_1/java'
+    compatSourceSet = 'compat_26_1'
 } else if (minecraftPatchVersion <= 1) {
-    compatSourceDir = 'src/compat_1_21_1/java'
+    compatSourceSet = 'compat_1_21_1'
 } else if (minecraftPatchVersion <= 8) {
-    compatSourceDir = 'src/compat_1_21_2/java'
+    compatSourceSet = 'compat_1_21_2'
 } else if (minecraftPatchVersion <= 10) {
-    compatSourceDir = 'src/compat_1_21_9/java'
+    compatSourceSet = 'compat_1_21_9'
 } else if (minecraftPatchVersion >= 11) {
     // Be optimistic for future 1.21 patches; add a new layer only when compilation proves an API break.
-    compatSourceDir = 'src/compat_1_21_11/java'
+    compatSourceSet = 'compat_1_21_11'
 }
 
-sourceSets.main.java.srcDir(compatSourceDir)
+ext.targetMinecraftVersion = targetMinecraftVersion
+ext.targetMinecraftVersionParts = targetMinecraftVersionParts
+ext.isMinecraft121 = isMinecraft121
+ext.isMinecraft26 = isMinecraft26
+ext.compatSourceSet = compatSourceSet
+ext.compatSourceDir = file("common/src/${compatSourceSet}/java")
+ext.targetJavaVersion = isMinecraft26 ? 25 : 21
 
-def targetJavaVersion = isMinecraft26 ? 25 : 21
-
-sourceSets.main.resources {
-    srcDir('src/generated/resources')
-
-    exclude("**/*.bbmodel")
-    exclude("src/generated/**/.cache")
+allprojects {
+    group = rootProject.mod_group_id
+    version = rootProject.mod_version
 }
 
 repositories {
     mavenCentral()
-}
-
-base {
-    archivesName = "${mod_id}-neoforge-${minecraft_version}"
-}
-
-java.toolchain.languageVersion = JavaLanguageVersion.of(targetJavaVersion)
-
-neoForge {
-    version = project.neo_version
-
-    if (!parchmentMinecraftVersion.isEmpty() && !parchmentMappingsVersion.isEmpty()) {
-        parchment {
-            mappingsVersion = parchmentMappingsVersion
-            minecraftVersion = parchmentMinecraftVersion
-        }
-    }
-
-    runs {
-        client {
-            client()
-            systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id
-        }
-
-        server {
-            server()
-            programArgument '--nogui'
-            systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id
-        }
-
-        gameTestServer {
-            type = "gameTestServer"
-            systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id
-        }
-
-        data {
-            data()
-            programArguments.addAll '--mod', project.mod_id, '--all', '--output', file('src/generated/resources/').getAbsolutePath(), '--existing', file('src/main/resources/').getAbsolutePath()
-        }
-
-        configureEach {
-            systemProperty 'forge.logging.markers', 'REGISTRIES'
-            logLevel = org.slf4j.event.Level.DEBUG
-        }
-    }
-
-    mods {
-        "${mod_id}" {
-            sourceSet(sourceSets.main)
-        }
-    }
-}
-
-configurations {
-    runtimeClasspath.extendsFrom localRuntime
 }
 
 dependencies {
@@ -119,52 +61,30 @@ dependencies {
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher:1.10.3'
 }
 
-var generateModMetadata = tasks.register("generateModMetadata", ProcessResources) {
-    var replaceProperties = [
-            minecraft_version      : minecraft_version,
-            minecraft_version_range: minecraft_version_range,
-            neo_version            : neo_version,
-            loader_version_range   : loader_version_range,
-            mod_id                 : mod_id,
-            mod_name               : mod_name,
-            mod_license            : mod_license,
-            mod_version            : mod_version,
-            mod_authors            : mod_authors,
-            mod_description        : mod_description,
-    ]
-    inputs.properties replaceProperties
-    expand replaceProperties
-    from "src/main/templates"
-    into "build/generated/sources/modMetadata"
+java.toolchain.languageVersion = JavaLanguageVersion.of(targetJavaVersion)
+
+tasks.named('wrapper', Wrapper).configure {
+    distributionType = Wrapper.DistributionType.BIN
 }
 
-sourceSets.main.resources.srcDir generateModMetadata
-neoForge.ideSyncTask generateModMetadata
-
-publishing {
-    publications {
-        register('mavenJava', MavenPublication) {
-            from components.java
-        }
-    }
-    repositories {
-        maven {
-            url = uri("${project.projectDir}/repo")
-        }
-    }
+tasks.named('compileJava').configure {
+    enabled = false
 }
 
-tasks.withType(JavaCompile).configureEach {
-    options.encoding = 'UTF-8'
+tasks.named('jar').configure {
+    enabled = false
 }
 
 tasks.named('test', Test).configure {
     useJUnitPlatform()
 }
 
-idea {
-    module {
-        downloadSources = true
-        downloadJavadoc = true
-    }
+tasks.register('buildAllPlatforms') {
+    group = 'build'
+    description = 'Builds the NeoForge and Fabric distributable jars for the selected Minecraft version.'
+    dependsOn ':neoforge:build', ':fabric:build'
+}
+
+tasks.named('build').configure {
+    dependsOn tasks.named('buildAllPlatforms')
 }

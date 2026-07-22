@@ -14,81 +14,97 @@ jobs:
         include:
           - minecraft: "1.21"
             neoforge: "21.0.167"
+            fabric_api: "0.102.0+1.21"
             java: "21"
             parchment_minecraft: "1.21"
             parchment_mappings: "2024.11.10"
           - minecraft: "1.21.1"
             neoforge: "21.1.242"
+            fabric_api: "0.116.14+1.21.1"
             java: "21"
             parchment_minecraft: "1.21.1"
             parchment_mappings: "2024.11.17"
           - minecraft: "1.21.2"
             neoforge: "21.2.1-beta"
+            fabric_api: "0.106.1+1.21.2"
             java: "21"
             parchment_minecraft: ""
             parchment_mappings: ""
           - minecraft: "1.21.3"
             neoforge: "21.3.97"
+            fabric_api: "0.114.1+1.21.3"
             java: "21"
             parchment_minecraft: "1.21.3"
             parchment_mappings: "2024.12.07"
           - minecraft: "1.21.4"
             neoforge: "21.4.157"
+            fabric_api: "0.119.4+1.21.4"
             java: "21"
             parchment_minecraft: "1.21.4"
             parchment_mappings: "2025.03.23"
           - minecraft: "1.21.5"
             neoforge: "21.5.98"
+            fabric_api: "0.128.2+1.21.5"
             java: "21"
             parchment_minecraft: "1.21.5"
             parchment_mappings: "2025.06.15"
           - minecraft: "1.21.6"
             neoforge: "21.6.20-beta"
+            fabric_api: "0.128.2+1.21.6"
             java: "21"
             parchment_minecraft: "1.21.6"
             parchment_mappings: "2025.06.29"
           - minecraft: "1.21.7"
             neoforge: "21.7.25-beta"
+            fabric_api: "0.129.0+1.21.7"
             java: "21"
             parchment_minecraft: "1.21.7"
             parchment_mappings: "2025.07.18"
           - minecraft: "1.21.8"
             neoforge: "21.8.54"
+            fabric_api: "0.136.1+1.21.8"
             java: "21"
             parchment_minecraft: "1.21.8"
             parchment_mappings: "2025.09.14"
           - minecraft: "1.21.9"
             neoforge: "21.9.16-beta"
+            fabric_api: "0.134.1+1.21.9"
             java: "21"
             parchment_minecraft: "1.21.9"
             parchment_mappings: "2025.10.05"
           - minecraft: "1.21.10"
             neoforge: "21.10.64"
+            fabric_api: "0.138.4+1.21.10"
             java: "21"
             parchment_minecraft: "1.21.10"
             parchment_mappings: "2025.10.12"
           - minecraft: "1.21.11"
             neoforge: "21.11.44"
+            fabric_api: "0.141.5+1.21.11"
             java: "21"
             parchment_minecraft: "1.21.11"
             parchment_mappings: "2025.12.20"
           - minecraft: "26.1"
             neoforge: "26.1.0.19-beta"
+            fabric_api: "0.145.1+26.1"
             java: "25"
             parchment_minecraft: ""
             parchment_mappings: ""
           - minecraft: "26.1.1"
             neoforge: "26.1.1.15-beta"
+            fabric_api: "0.145.4+26.1.1"
             java: "25"
             parchment_minecraft: ""
             parchment_mappings: ""
           - minecraft: "26.1.2"
             neoforge: "26.1.2.84"
+            fabric_api: "0.155.2+26.1.2"
             java: "25"
             parchment_minecraft: ""
             parchment_mappings: ""
           - minecraft: "26.2"
             neoforge: "26.2.0.26-beta"
+            fabric_api: "0.155.2+26.2"
             java: "25"
             parchment_minecraft: ""
             parchment_mappings: ""
@@ -106,23 +122,26 @@ jobs:
     - name: Setup Gradle
       uses: gradle/actions/setup-gradle@v6
 
-    - name: Build Minecraft ${{ matrix.minecraft }}
+    - name: Build NeoForge and Fabric for Minecraft ${{ matrix.minecraft }}
       run: >
         ./gradlew build --no-daemon --no-configuration-cache --warning-mode all --stacktrace
         -Pminecraft_version=${{ matrix.minecraft }}
         -Pminecraft_version_range='[${{ matrix.minecraft }}]'
         -Pneo_version=${{ matrix.neoforge }}
+        -Pfabric_loader_version=0.19.3
+        -Pfabric_api_version=${{ matrix.fabric_api }}
         -Pparchment_minecraft_version=${{ matrix.parchment_minecraft }}
         -Pparchment_mappings_version=${{ matrix.parchment_mappings }}
 
-    - name: Upload Minecraft ${{ matrix.minecraft }} jar
+    - name: Upload Minecraft ${{ matrix.minecraft }} jars
       uses: actions/upload-artifact@v7
       with:
-        name: onlytp-neoforge-${{ matrix.minecraft }}
+        name: onlytp-${{ matrix.minecraft }}
         path: |
-          build/libs/*.jar
-          !build/libs/*-sources.jar
-          !build/libs/*-javadoc.jar
+          neoforge/build/libs/*.jar
+          fabric/build/libs/*.jar
+          !**/build/libs/*-sources.jar
+          !**/build/libs/*-javadoc.jar
         if-no-files-found: error
 
   release:
@@ -145,12 +164,13 @@ jobs:
         body: |
           ## Release ${{ github.ref_name }}
           
-          This release contains OnlyTP builds for Minecraft 1.21 through 1.21.11 and 26.1 through 26.2.
+          This release contains NeoForge and Fabric builds of OnlyTP for Minecraft 1.21 through 1.21.11 and 26.1 through 26.2.
 
           ### Installation
           1. Download the JAR file matching your Minecraft version
           2. Place it in your Minecraft `mods` folder
-          3. Launch Minecraft with NeoForge installed
+          3. Launch Minecraft with the matching NeoForge or Fabric Loader
+          4. Fabric installations also require Fabric API
           
           ### Changes
           Please see the changelog for details about this version.
