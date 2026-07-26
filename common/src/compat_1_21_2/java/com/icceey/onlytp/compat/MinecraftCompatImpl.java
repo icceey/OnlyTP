@@ -1,6 +1,7 @@
 package com.icceey.onlytp.compat;
 
 import net.minecraft.commands.CommandSourceStack;
+import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
@@ -15,6 +16,11 @@ public final class MinecraftCompatImpl implements MinecraftCompat {
     @Override
     public boolean hasPermissionLevel(CommandSourceStack source, ServerPlayer player, int level) {
         return source.hasPermission(level);
+    }
+
+    @Override
+    public ServerLevel getServerLevel(Entity entity) {
+        return (ServerLevel) entity.level();
     }
 
     @Override
@@ -50,5 +56,21 @@ public final class MinecraftCompatImpl implements MinecraftCompat {
     @Override
     public void startRiding(ServerPlayer player, Entity vehicle) {
         player.startRiding(vehicle, true);
+    }
+
+    @Override
+    public Component translatableWithFallback(String key, Object... args) {
+        String serverText = Component.translatable(key).getString();
+        return Component.translatableWithFallback(key, serverText, args);
+    }
+
+    @Override
+    public void sendSuccess(CommandSourceStack source, Component message, boolean broadcastToAdmins) {
+        source.sendSuccess(() -> message, broadcastToAdmins);
+    }
+
+    @Override
+    public void sendSystemMessage(ServerPlayer player, Component message) {
+        player.sendSystemMessage(message);
     }
 }

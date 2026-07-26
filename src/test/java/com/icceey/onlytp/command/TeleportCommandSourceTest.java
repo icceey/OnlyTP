@@ -22,6 +22,12 @@ class TeleportCommandSourceTest {
                     .map(TeleportCommandSourceTest::readSourceUnchecked)
                     .collect(Collectors.joining("\n"));
         }
+        String legacyForgeSources;
+        try (Stream<Path> sources = readJavaSources(Path.of("legacy-forge/src"))) {
+            legacyForgeSources = sources
+                    .map(TeleportCommandSourceTest::readSourceUnchecked)
+                    .collect(Collectors.joining("\n"));
+        }
 
         assertTrue(
                 compatSources.contains("net.minecraft.world.level.portal.TeleportTransition"),
@@ -30,6 +36,11 @@ class TeleportCommandSourceTest {
         assertTrue(
                 compatSources.contains("net.minecraft.world.level.portal.DimensionTransition"),
                 "Minecraft 1.21/1.21.1 cross-dimension riding entity teleport must keep the returned replacement entity path"
+        );
+        assertTrue(
+                legacyForgeSources.contains("net.minecraftforge.common.util.ITeleporter")
+                        && legacyForgeSources.contains("return entity.changeDimension("),
+                "Legacy Forge cross-dimension riding entity teleport must use the returned ITeleporter replacement entity"
         );
         assertTrue(
                 commandSource.contains("return teleportedEntity instanceof LivingEntity teleportedLivingEntity ? teleportedLivingEntity : null"),
@@ -51,7 +62,14 @@ class TeleportCommandSourceTest {
         );
         assertFalse(
                 commandSource.contains("net.minecraftforge") || compatSources.contains("net.minecraftforge"),
-                "Shared teleport code must not contain legacy Forge API imports"
+                "Modern shared teleport code must not contain Forge API imports"
+        );
+        assertTrue(
+                commandSource.contains("COMPAT.getServerLevel(")
+                        && commandSource.contains("COMPAT.sendSuccess(")
+                        && commandSource.contains("COMPAT.sendSystemMessage(")
+                        && commandSource.contains("COMPAT.translatableWithFallback("),
+                "Minecraft-version-specific world and message APIs must stay behind the compatibility interface"
         );
     }
 
@@ -75,15 +93,31 @@ class TeleportCommandSourceTest {
                     .collect(Collectors.joining("\n"));
         }
 
+        String legacyForgeSources;
+        try (Stream<Path> sources = readJavaSources(Path.of("legacy-forge/src"))) {
+            legacyForgeSources = sources.map(TeleportCommandSourceTest::readSourceUnchecked)
+                    .collect(Collectors.joining("\n"));
+        }
+
         assertFalse(
-                commonSources.contains("net.neoforged") || commonSources.contains("net.fabricmc"),
+                commonSources.contains("net.neoforged")
+                        || commonSources.contains("net.fabricmc")
+                        || commonSources.contains("net.minecraftforge"),
                 "Common sources must remain loader-neutral"
         );
         assertFalse(neoForgeSources.contains("net.fabricmc"), "NeoForge sources must not import Fabric APIs");
         assertFalse(fabricSources.contains("net.neoforged"), "Fabric sources must not import NeoForge APIs");
+        assertFalse(
+                legacyForgeSources.contains("net.neoforged") || legacyForgeSources.contains("net.fabricmc"),
+                "Legacy Forge sources must not import NeoForge or Fabric APIs"
+        );
         assertTrue(
                 fabricSources.contains("TeleportCommand.register(dispatcher)"),
                 "Fabric must delegate command registration to the shared implementation"
+        );
+        assertTrue(
+                legacyForgeSources.contains("TeleportCommand.register(event.getDispatcher())"),
+                "Legacy Forge must delegate command registration to the shared implementation"
         );
     }
 

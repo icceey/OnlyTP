@@ -83,6 +83,42 @@ class BuildCompatibilitySourceTest {
     }
 
     @Test
+    void legacyForgeTargetsUseAnIsolatedPinnedBuild() throws IOException {
+        String settings = Files.readString(Path.of("legacy-forge/settings.gradle"));
+        String buildScript = Files.readString(Path.of("legacy-forge/build.gradle"));
+        String properties = Files.readString(Path.of("legacy-forge/gradle.properties"));
+        String wrapper = Files.readString(Path.of("legacy-forge/gradle/wrapper/gradle-wrapper.properties"));
+
+        assertTrue(
+                settings.contains("'forge-1.18.2', 'forge-1.19.2', 'forge-1.20.1'"),
+                "Legacy Forge must keep exactly the three frozen Minecraft target projects"
+        );
+        assertTrue(
+                properties.contains("forge_1_18_2_version=40.3.12")
+                        && properties.contains("forge_1_19_2_version=43.5.2")
+                        && properties.contains("forge_1_20_1_version=47.4.22"),
+                "Legacy Forge dependencies must be explicitly pinned"
+        );
+        assertTrue(
+                buildScript.contains("JavaLanguageVersion.of(17)")
+                        && buildScript.contains("net.minecraftforge.gradle")
+                        && buildScript.contains("../common/src/main/java")
+                        && buildScript.contains("../common/src/main/resources"),
+                "Legacy Forge must use Java 17 and share loader-neutral command code and resources"
+        );
+        assertTrue(
+                wrapper.contains("gradle-8.14.4-bin.zip"),
+                "Legacy Forge must stay isolated from the modern Gradle 9 wrapper"
+        );
+        assertTrue(
+                Files.isRegularFile(Path.of("legacy-forge/gradle/wrapper/gradle-wrapper.jar"))
+                        && Files.isRegularFile(Path.of("legacy-forge/gradlew"))
+                        && Files.isRegularFile(Path.of("legacy-forge/gradlew.bat")),
+                "Legacy Forge must include a complete standalone Gradle wrapper"
+        );
+    }
+
+    @Test
     void fabricRunDirectoriesResolveToTheRootRunDirectory() throws IOException {
         String fabricBuild = Files.readString(Path.of("fabric/build.gradle"));
 

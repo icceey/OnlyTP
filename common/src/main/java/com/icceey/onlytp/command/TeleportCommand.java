@@ -12,12 +12,10 @@ import net.minecraft.commands.SharedSuggestionProvider;
 import net.minecraft.commands.arguments.EntityArgument;
 import net.minecraft.core.particles.ParticleOptions;
 import net.minecraft.core.particles.ParticleTypes;
-import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
-import net.minecraft.util.RandomSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 
@@ -51,7 +49,7 @@ public class TeleportCommand {
 
         // 确保命令执行者是玩家
         if (!(source.getEntity() instanceof ServerPlayer executor)) {
-            source.sendFailure(translatableWithFallback("commands.onlytp.only_player"));
+            source.sendFailure(COMPAT.translatableWithFallback("commands.onlytp.only_player"));
             return 0;
         }
 
@@ -61,19 +59,19 @@ public class TeleportCommand {
         // 检查是否尝试传送到自己
         if (executor.equals(targetPlayer) && !COMPAT.hasPermissionLevel(source, executor, 2)) {
             // 如果没有作弊权限，禁止原地TP
-            source.sendFailure(translatableWithFallback("commands.onlytp.no_self_tp"));
+            source.sendFailure(COMPAT.translatableWithFallback("commands.onlytp.no_self_tp"));
             return 0;
         }
 
         // 检查目标玩家是否在线并且存活
         if (!targetPlayer.isAlive() || targetPlayer.hasDisconnected()) {
-            source.sendFailure(translatableWithFallback("commands.onlytp.target_dead_offline"));
+            source.sendFailure(COMPAT.translatableWithFallback("commands.onlytp.target_dead_offline"));
             return 0;
         }
 
         // 检查当前玩家是否在线并且存活
         if (!executor.isAlive() || executor.hasDisconnected()) {
-            source.sendFailure(translatableWithFallback("commands.onlytp.executor_dead_offline"));
+            source.sendFailure(COMPAT.translatableWithFallback("commands.onlytp.executor_dead_offline"));
             return 0;
         }
 
@@ -84,7 +82,8 @@ public class TeleportCommand {
         }
 
         // 在原位置播放下界传送门音效
-        executor.level().playSound(
+        ServerLevel executorLevel = COMPAT.getServerLevel(executor);
+        executorLevel.playSound(
                 null,                    // 发送给所有玩家，无需特定玩家
                 executor.getX(),         // 音效 X 坐标
                 executor.getY(),         // 音效 Y 坐标
@@ -96,10 +95,10 @@ public class TeleportCommand {
         );
 
         // 在出发点生成末影人粒子效果
-        spawnTeleportParticles(executor, (ServerLevel) executor.level(), ParticleTypes.PORTAL);
+        spawnTeleportParticles(executor, executorLevel, ParticleTypes.PORTAL);
 
         // 目标坐标
-        ServerLevel targetLevel = (ServerLevel) targetPlayer.level();
+        ServerLevel targetLevel = COMPAT.getServerLevel(targetPlayer);
         double targetX = targetPlayer.getX();
         double targetY = targetPlayer.getY();
         double targetZ = targetPlayer.getZ();
@@ -132,13 +131,20 @@ public class TeleportCommand {
         }
 
         // 发送成功消息
-        source.sendSuccess(() -> translatableWithFallback("commands.onlytp.success", targetPlayer.getScoreboardName()), true);
+        COMPAT.sendSuccess(
+                source,
+                COMPAT.translatableWithFallback("commands.onlytp.success", targetPlayer.getScoreboardName()),
+                true
+        );
 
         // 通知目标玩家有人传送到了他那里
-        targetPlayer.sendSystemMessage(translatableWithFallback("commands.onlytp.notify_target", executor.getScoreboardName()));
+        COMPAT.sendSystemMessage(
+                targetPlayer,
+                COMPAT.translatableWithFallback("commands.onlytp.notify_target", executor.getScoreboardName())
+        );
 
         // 在目的地播放下界传送门音效
-        targetPlayer.level().playSound(
+        targetLevel.playSound(
                 null,                    // 发送给所有玩家，无需特定玩家
                 targetPlayer.getX(),      // 音效 X 坐标
                 targetPlayer.getY(),      // 音效 Y 坐标
@@ -150,7 +156,7 @@ public class TeleportCommand {
         );
 
         // 在目的地生成末影人粒子效果
-        spawnTeleportParticles(targetPlayer, (ServerLevel) targetPlayer.level(), ParticleTypes.REVERSE_PORTAL);
+        spawnTeleportParticles(targetPlayer, targetLevel, ParticleTypes.REVERSE_PORTAL);
 
         return 1;
     }
@@ -163,7 +169,7 @@ public class TeleportCommand {
      * @param particleType 要生成的粒子类型
      */
     private static void spawnTeleportParticles(ServerPlayer player, ServerLevel level, ParticleOptions particleType) {
-        RandomSource random = level.getRandom();
+        var random = level.getRandom();
         IntStream.range(0, 50).forEach(i -> {
             double x = player.getX() + (random.nextDouble() - 0.5) * 2.0;
             double y = player.getY() + random.nextDouble() * 2.0;
@@ -181,7 +187,7 @@ public class TeleportCommand {
     private static LivingEntity teleportRidingEntity(LivingEntity ridingEntity, ServerLevel targetLevel,
                                                     double targetX, double targetY, double targetZ,
                                                     float targetYRot, float targetXRot) {
-        if (ridingEntity.level() == targetLevel) {
+        if (COMPAT.getServerLevel(ridingEntity) == targetLevel) {
             boolean teleported = COMPAT.teleportEntityTo(
                     ridingEntity,
                     targetLevel,
@@ -208,10 +214,5 @@ public class TeleportCommand {
             teleportedEntity.setYHeadRot(targetYRot);
         }
         return teleportedEntity instanceof LivingEntity teleportedLivingEntity ? teleportedLivingEntity : null;
-    }
-
-    private static Component translatableWithFallback(String key, Object... args) {
-        String serverText = Component.translatable(key).getString();
-        return Component.translatableWithFallback(key, serverText, args);
     }
 }

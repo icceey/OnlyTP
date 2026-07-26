@@ -2,13 +2,13 @@
 
 [English](README.md) | [中文](README_zh.md)
 
-OnlyTP 是一个轻量级的 Minecraft NeoForge 与 Fabric 模组，为您的游戏体验提供便捷的传送功能。无论您是在探索广阔的世界，还是要帮助有需要的朋友，OnlyTP 都能让您在 Minecraft 服务器中的旅行变得简单高效。
+OnlyTP 是一个轻量级的 Minecraft Forge、NeoForge 与 Fabric 模组，为您的游戏体验提供便捷的传送功能。无论您是在探索广阔的世界，还是要帮助有需要的朋友，OnlyTP 都能让您在 Minecraft 服务器中的旅行变得简单高效。
 
 ## ✨ 功能特色
 
 - **🎯 简单命令**: 直观的传送命令，易于记忆和使用
 - **🌟 增强体验**: 传送时带有精美的粒子效果和音效反馈
-- **⚡ 多加载器支持**: 使用同一套公共代码原生构建 NeoForge 与 Fabric 版本
+- **⚡ 多加载器支持**: 在同一仓库中维护冻结的旧版 Forge，以及持续维护的 NeoForge 与 Fabric 版本
 
 ## 🎮 使用方法
 
@@ -25,29 +25,37 @@ OnlyTP 是一个轻量级的 Minecraft NeoForge 与 Fabric 模组，为您的游
 
 ## 🔧 兼容性
 
-- **Minecraft 版本**: 1.21 至 1.21.11，以及 26.1 至 26.2
-- **加载器**: NeoForge 或 Fabric Loader；请使用同时匹配加载器与 Minecraft 版本的 jar
-- **Java**: Minecraft 1.21.x 使用 Java 21；Minecraft 26.x 使用 Java 25
-- **依赖**: Fabric 构建需要 Fabric API；NeoForge 构建没有额外模组依赖
+- **旧版 Forge**: Minecraft 1.18.2、1.19.2 与 1.20.1；这些 Minecraft 目标版本保持冻结
+- **现代构建**: Minecraft 1.21 至 1.21.11，以及 26.1 至 26.2，支持 NeoForge 与 Fabric
+- **加载器**: 请使用同时匹配加载器与 Minecraft 版本的 jar
+- **Java**: 旧版 Forge 使用 Java 17；Minecraft 1.21.x 使用 Java 21；Minecraft 26.x 使用 Java 25
+- **依赖**: Fabric 构建需要 Fabric API；Forge 与 NeoForge 构建没有额外模组依赖
 - **安装要求**: 服务端必需，客户端可选
   - 在客户端安装可获得本地化提示
-  - 仅服务端安装时所有玩家使用服务器语言
+  - 仅服务端安装时仍会显示可读提示；Forge 1.18.2 与 1.19.2 使用英文回退文本
 
 ## 🛠️ 开发
 
-`master` 分支同时包含两个加载器实现：
+`master` 分支同时包含所有受支持的加载器与 Minecraft 目标：
 
-- `common/` - 公共命令逻辑、资源和 Minecraft 版本兼容层
+- `common/` - 与加载器无关的公共命令逻辑、资源和现代 Minecraft 版本兼容层
 - `neoforge/` - NeoForge 入口与元数据
 - `fabric/` - Fabric 入口与元数据
+- `legacy-forge/` - 与现代构建隔离的 Java 17/ForgeGradle 构建，固定支持 1.18.2、1.19.2 与 1.20.1
 
-为选定的 Minecraft 版本构建两个可发布 jar：
+为选定的现代 Minecraft 版本构建 NeoForge 与 Fabric jar：
 
 ```bash
 ./gradlew build
 ```
 
-产物分别位于 `neoforge/build/libs/` 和 `fabric/build/libs/`。
+在 Java 17 环境中构建三个冻结的 Forge 目标：
+
+```bash
+./legacy-forge/gradlew -p legacy-forge build
+```
+
+现代产物位于 `neoforge/build/libs/` 和 `fabric/build/libs/`；旧版产物位于 `legacy-forge/forge-<Minecraft版本>/build/libs/`。
 
 ## 📄 许可证
 

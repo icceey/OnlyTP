@@ -2,34 +2,44 @@
 
 ## Project Overview
 
-OnlyTP is a minimal Minecraft NeoForge and Fabric mod for the Minecraft 1.21
-series and Minecraft 26.x. It adds one command, `/tlp <player>`, allowing a player to
-teleport to another online player with portal particles, portal sound feedback,
-target notifications, and riding-entity preservation.
+OnlyTP is a minimal Minecraft Forge, NeoForge, and Fabric mod. Legacy Forge is
+frozen on Minecraft `1.18.2`, `1.19.2`, and `1.20.1`; NeoForge and Fabric cover
+the Minecraft 1.21 series and Minecraft 26.x. It adds one command,
+`/tlp <player>`, allowing a player to teleport to another online player with
+portal particles, portal sound feedback, target notifications, and
+riding-entity preservation.
 
-This project no longer supports Forge. Do not add ForgeGradle, `net.minecraftforge`
-imports, `META-INF/mods.toml`, `pack.mcmeta`, or Forge version properties back
-into the project.
+Forge is intentionally isolated under `legacy-forge/`. Do not add ForgeGradle,
+`net.minecraftforge` imports, `META-INF/mods.toml`, `pack.mcmeta`, or Forge
+version properties to the modern root build, `common/`, `neoforge/`, or
+`fabric/`. Do not add newer Minecraft targets to the Forge build unless the user
+explicitly changes the frozen-support policy.
 
 ## Current Stack
 
-- Loader/build: NeoForge via `net.neoforged.moddev`; Fabric via Fabric Loom
+- Loader/build: legacy Forge via ForgeGradle; NeoForge via
+  `net.neoforged.moddev`; Fabric via Fabric Loom
 - Default local development target: Minecraft `1.21.1`, NeoForge `21.1.242+`,
   Fabric Loader `0.19.3+`, and the matching Fabric API
-- CI/release matrix: Minecraft `1.21` through `1.21.11` and `26.1` through
-  `26.2`, with matching NeoForge and Fabric API builds
-- Java: 21 for Minecraft 1.21.x and 25 for Minecraft 26.x; `.java-version`
-  keeps the default 1.21.1 workspace on Java 21, while Gradle toolchains select
-  the target-specific JDK
-- Gradle wrapper: Gradle 9.2.1
+- CI/release matrix: Forge for Minecraft `1.18.2`, `1.19.2`, and `1.20.1`;
+  NeoForge and Fabric for Minecraft `1.21` through `1.21.11` and `26.1`
+  through `26.2`
+- Java: 17 for legacy Forge, 21 for Minecraft 1.21.x, and 25 for Minecraft
+  26.x; `.java-version` keeps the default 1.21.1 workspace on Java 21
+- Gradle wrappers: Gradle 9.2.1 for the modern root build and Gradle 8.14.4 for
+  the isolated `legacy-forge/` build
 - Mappings: Parchment on NeoForge for Minecraft 1.21.1 by default; Fabric uses
   official Mojang mappings on obfuscated Minecraft 1.21.x. Matrix builds can
-  override or disable Parchment when a target has no Parchment release
+  override or disable Parchment when a target has no Parchment release. Legacy
+  Forge uses official Mojang mappings
 
 `gradle.properties` is the single source of truth for `mod_id`, `mod_version`,
 `minecraft_version`, `neo_version`, `fabric_loader_version`, and
-`fabric_api_version`. Keep `mod_id=onlytp` synchronized with `OnlyTP.MODID`,
-`OnlyTPFabric.MODID`, the `@Mod(OnlyTP.MODID)` annotation, and `fabric.mod.json`.
+`fabric_api_version`. The legacy build reads mod identity and version from that
+same file; `legacy-forge/gradle.properties` only pins its Forge dependencies.
+Keep `mod_id=onlytp` synchronized with `OnlyTP.MODID`, `OnlyTPFabric.MODID`,
+`OnlyTPForge.MODID`, the loader annotations, `fabric.mod.json`, and generated
+Forge/NeoForge metadata.
 
 ## Source Layout
 
@@ -47,6 +57,8 @@ Loader entry points live in their platform projects:
 - `fabric/src/main/java/com/icceey/onlytp/fabric/OnlyTPFabric.java` - Fabric
   entry point; registers commands through Fabric API's
   `CommandRegistrationCallback`.
+- `legacy-forge/src/main/java/com/icceey/onlytp/forge/OnlyTPForge.java` - shared
+  entry point for the three frozen Forge targets.
 
 Version-specific Minecraft API calls live outside `src/main/java` and are
 selected by `minecraft_version` in `build.gradle`:
@@ -58,6 +70,9 @@ selected by `minecraft_version` in `build.gradle`:
   patches by default
 - `common/src/compat_26_1/java/` - Minecraft `26.1` and newer `26.x` releases by
   default
+- `legacy-forge/src/compat_1_18_2/java/` - Forge/Minecraft `1.18.2`
+- `legacy-forge/src/compat_1_19_2/java/` - Forge/Minecraft `1.19.2`
+- `legacy-forge/src/compat_1_20_1/java/` - Forge/Minecraft `1.20.1`
 
 Keep `TeleportCommand` free of reflection and version-branch details. Add or
 adjust a compat source directory when Minecraft changes these command,
@@ -73,20 +88,28 @@ Shared resources and platform metadata use these locations:
   NeoForge metadata template
 - `fabric/src/main/resources/fabric.mod.json` - generated Fabric metadata
   template
+- `legacy-forge/src/main/templates/META-INF/mods.toml` - generated legacy Forge
+  metadata template
+- `legacy-forge/src/main/templates/pack.mcmeta` - version-expanded legacy
+  resource-pack metadata
 
 Do not recreate `neoforge/src/main/resources/META-INF/`; the NeoForge
 ModDevGradle MDK keeps loader metadata under
 `neoforge/src/main/templates/META-INF/`.
 
-Keep `common/` free of `net.neoforged.*` and `net.fabricmc.*` imports. Both
-loader projects compile the same common sources and the same selected Minecraft
-compatibility source directory.
+Keep `common/` free of `net.neoforged.*`, `net.fabricmc.*`, and
+`net.minecraftforge.*` imports. All platform projects compile the shared common
+command sources; loader and Minecraft-version APIs stay in their entry point and
+compatibility directories. Forge imports are permitted only under
+`legacy-forge/src/`.
 
 ## Build And Run
 
 Use a fresh shell in the repository so jenv picks up `.java-version=21` for the
 default Minecraft 1.21.1 target. Gradle selects or downloads Java 25 when a
-Minecraft 26.x target is requested.
+Minecraft 26.x target is requested. Run the legacy wrapper with a Java 17
+environment and always pass `-p legacy-forge` when invoking it from the
+repository root.
 
 ```bash
 ./gradlew build
@@ -95,6 +118,9 @@ Minecraft 26.x target is requested.
 ./gradlew :neoforge:runData
 ./gradlew :fabric:runClient
 ./gradlew :fabric:runServer
+
+# Run with Java 17
+./legacy-forge/gradlew -p legacy-forge build
 ```
 
 `./gradlew build` outputs both distributable jars under:
@@ -106,6 +132,14 @@ fabric/build/libs/onlytp-fabric-1.21.1-<version>.jar
 
 Matrix builds replace `1.21.1` with the target Minecraft version in the jar
 name.
+
+The legacy build outputs:
+
+```text
+legacy-forge/forge-1.18.2/build/libs/onlytp-forge-1.18.2-<version>.jar
+legacy-forge/forge-1.19.2/build/libs/onlytp-forge-1.19.2-<version>.jar
+legacy-forge/forge-1.20.1/build/libs/onlytp-forge-1.20.1-<version>.jar
+```
 
 The `run/` directory is a local game working directory. Do not commit worlds,
 logs, or runtime-generated game files.
@@ -131,8 +165,10 @@ feature change:
 ## Internationalization
 
 All player-facing messages use translation keys under `commands.onlytp.*`.
-`TeleportCommand.translatableWithFallback()` exists so server-only installs still
-display readable messages when the client lacks this mod's lang files.
+`MinecraftCompat.translatableWithFallback()` keeps server-only installs
+readable when the client lacks this mod's lang files. Minecraft 1.18.2 and
+1.19.2 do not have the newer component fallback API, so their compatibility
+implementations send the English fallback text directly.
 
 When adding or changing a message key, update every language file in:
 
@@ -152,24 +188,34 @@ Current language files:
 ## Testing And Verification
 
 Before claiming a migration, behavior, or build change is complete, run the
-smallest command that proves it. For normal changes, use:
+smallest command that proves it. For modern-only changes, use:
 
 ```bash
 ./gradlew build --no-daemon --warning-mode all
 ```
 
+When shared command code, resources, release automation, or legacy Forge code
+changes, also run under Java 17:
+
+```bash
+./legacy-forge/gradlew -p legacy-forge build --no-daemon --no-configuration-cache --warning-mode all
+```
+
 Useful focused checks:
 
 ```bash
-rg -n "net\\.minecraftforge|MinecraftForge|ForgeGradle|META-INF/mods\\.toml|pack\\.mcmeta|1\\.20\\.1|47\\." -g '!build/**' -g '!run/**'
+rg -n "net\\.minecraftforge|MinecraftForge|ForgeGradle" common neoforge fabric
+rg -n "net\\.neoforged|net\\.fabricmc" legacy-forge/src
 jar tf neoforge/build/libs/onlytp-neoforge-*.jar | sort
 jar tf fabric/build/libs/onlytp-fabric-*.jar | sort
+for jar in legacy-forge/forge-*/build/libs/onlytp-forge-*.jar; do jar tf "$jar" | sort; done
 ```
 
 The source-level regression tests intentionally check that common sources are
-loader-neutral, legacy Forge imports are absent, both loaders compile the same
-compatibility layer, and cross-dimension riding-entity teleporting uses the
-returned Minecraft replacement entity path.
+loader-neutral, legacy Forge imports remain isolated, all platforms compile the
+shared command source, exact Forge targets and wrappers remain pinned, and
+cross-dimension riding-entity teleporting uses the returned Minecraft
+replacement entity path.
 
 ## Runtime Testing Skill
 
@@ -181,10 +227,10 @@ runtime testing skill is available at:
 ```
 
 If that skill is available, use it for singleplayer, multiplayer, Computer Use,
-input-source handling, and Minecraft `1.21.x`/`26.x` matrix runtime testing. If
-it is not available, ignore this note and continue with the smallest practical
-manual verification for the requested change; do not fail a task only because
-the skill is missing.
+input-source handling, and representative Forge/NeoForge/Fabric runtime
+testing. If it is not available, ignore this note and continue with the
+smallest practical manual verification for the requested change; do not fail a
+task only because the skill is missing.
 
 For OnlyTP-specific runtime checks, use `/tlp Alice` for singleplayer
 self-teleport and `/tlp Bob` from Alice for two-client multiplayer checks. For
@@ -195,6 +241,13 @@ and verify the player remains mounted.
 
 - Keep GitHub Actions building both NeoForge and Fabric on JDK 21 for Minecraft
   1.21.x and JDK 25 for Minecraft 26.x.
+- Keep GitHub Actions building all three frozen Forge targets on JDK 17.
+- Keep Forge Minecraft support fixed at `1.18.2`, `1.19.2`, and `1.20.1`.
+  Forge patch versions are exact build pins and may be refreshed for fixes, but
+  do not add newer Minecraft versions to the legacy build without an explicit
+  feature request.
+- Keep the Gradle 8.14.4/ForgeGradle build isolated under `legacy-forge/`; do
+  not include it in the Gradle 9.2.1 modern settings graph.
 - Keep Dependabot scoped to GitHub Actions updates unless the user asks for a
   broader ecosystem.
 - The `forge.logging.markers` run property in `build.gradle` comes from the

@@ -1,0 +1,174 @@
+plugins {
+    id 'base'
+    id 'net.minecraftforge.gradle' version '6.0.53' apply false
+}
+
+def sharedModProperties = new Properties()
+rootProject.file('../gradle.properties').withInputStream {
+    sharedModProperties.load(it)
+}
+
+def requiredSharedProperty = { String key ->
+    def value = sharedModProperties.getProperty(key)
+    if (value == null || value.isBlank()) {
+        throw new GradleException("Missing ${key} in ../gradle.properties")
+    }
+    value
+}
+
+def modId = requiredSharedProperty('mod_id')
+def modName = requiredSharedProperty('mod_name')
+def modLicense = requiredSharedProperty('mod_license')
+def modVersion = requiredSharedProperty('mod_version')
+def modGroupId = requiredSharedProperty('mod_group_id')
+def modAuthors = requiredSharedProperty('mod_authors')
+def modDescription = requiredSharedProperty('mod_description')
+
+def forge1182Version = providers.gradleProperty('forge_1_18_2_version').get()
+def forge1192Version = providers.gradleProperty('forge_1_19_2_version').get()
+def forge1201Version = providers.gradleProperty('forge_1_20_1_version').get()
+
+def legacyTargets = [
+        'forge-1.18.2': [
+                minecraft       : '1.18.2',
+                forge           : forge1182Version,
+                loaderRange     : '[40,)',
+                forgeRange      : '[40,)',
+                minecraftRange  : '[1.18.2]',
+                resourcePackFormat: 8,
+                compatSourceSet : 'compat_1_18_2',
+        ],
+        'forge-1.19.2': [
+                minecraft       : '1.19.2',
+                forge           : forge1192Version,
+                loaderRange     : '[43,)',
+                forgeRange      : '[43,)',
+                minecraftRange  : '[1.19.2]',
+                resourcePackFormat: 9,
+                compatSourceSet : 'compat_1_19_2',
+        ],
+        'forge-1.20.1': [
+                minecraft       : '1.20.1',
+                forge           : forge1201Version,
+                loaderRange     : '[47,)',
+                forgeRange      : '[47,)',
+                minecraftRange  : '[1.20.1]',
+                resourcePackFormat: 15,
+                compatSourceSet : 'compat_1_20_1',
+        ],
+]
+
+subprojects { legacyProject ->
+    def legacyTarget = legacyTargets[legacyProject.name]
+    if (legacyTarget == null) {
+        throw new GradleException("Unsupported legacy Forge project: ${legacyProject.name}")
+    }
+
+    apply plugin: 'java-library'
+    apply plugin: 'net.minecraftforge.gradle'
+
+    group = modGroupId
+    version = modVersion
+
+    base {
+        archivesName = "${modId}-forge-${legacyTarget.minecraft}"
+    }
+
+    java {
+        toolchain.languageVersion = JavaLanguageVersion.of(17)
+    }
+
+    sourceSets.main.java {
+        srcDir(rootProject.file('../common/src/main/java'))
+        srcDir(rootProject.file('src/main/java'))
+        srcDir(rootProject.file("src/${legacyTarget.compatSourceSet}/java"))
+    }
+
+    sourceSets.main.resources {
+        srcDir(rootProject.file('../common/src/main/resources'))
+    }
+
+    minecraft {
+        mappings channel: 'official', version: legacyTarget.minecraft
+    }
+
+    repositories {
+        mavenCentral()
+    }
+
+    dependencies {
+        minecraft "net.minecraftforge:forge:${legacyTarget.minecraft}-${legacyTarget.forge}"
+    }
+
+    def replaceProperties = [
+            minecraft_version      : legacyTarget.minecraft,
+            minecraft_version_range: legacyTarget.minecraftRange,
+            forge_version          : legacyTarget.forge,
+            forge_version_range    : legacyTarget.forgeRange,
+            loader_version_range   : legacyTarget.loaderRange,
+            resource_pack_format   : legacyTarget.resourcePackFormat,
+            mod_id                 : modId,
+            mod_name               : modName,
+            mod_license            : modLicense,
+            mod_version            : modVersion,
+            mod_authors            : modAuthors,
+            mod_description        : modDescription,
+    ]
+
+    tasks.named('processResources', ProcessResources).configure {
+        inputs.properties replaceProperties
+        from(rootProject.file('src/main/templates')) {
+            expand replaceProperties
+        }
+    }
+
+    tasks.named('jar', Jar).configure {
+        manifest {
+            attributes([
+                    'Specification-Title'     : modId,
+                    'Specification-Vendor'    : modAuthors,
+                    'Specification-Version'   : '1',
+                    'Implementation-Title'    : legacyProject.name,
+                    'Implementation-Version'  : modVersion,
+                    'Implementation-Vendor'   : modAuthors,
+            ])
+        }
+        finalizedBy 'reobfJar'
+    }
+
+    tasks.withType(JavaCompile).configureEach {
+        options.encoding = 'UTF-8'
+        options.release = 17
+    }
+}
+
+tasks.register('verifyLegacyMatrix') {
+    group = 'verification'
+    description = 'Verifies the fixed legacy Forge target set and shared source layout.'
+
+    doLast {
+        def expectedProjects = ['forge-1.18.2', 'forge-1.19.2', 'forge-1.20.1'] as Set
+        if (legacyTargets.keySet() != expectedProjects) {
+            throw new GradleException("Legacy Forge matrix must remain ${expectedProjects}")
+        }
+
+        legacyTargets.each { projectName, target ->
+            def compatSource = rootProject.file(
+                    "src/${target.compatSourceSet}/java/com/icceey/onlytp/compat/MinecraftCompatImpl.java"
+            )
+            if (!compatSource.isFile()) {
+                throw new GradleException("Missing compatibility source for ${projectName}: ${compatSource}")
+            }
+        }
+    }
+}
+
+tasks.named('check').configure {
+    dependsOn tasks.named('verifyLegacyMatrix')
+    dependsOn subprojects.collect { "${it.path}:check" }
+}
+
+tasks.named('build').configure {
+    dependsOn tasks.named('verifyLegacyMatrix')
+    dependsOn subprojects.collect { "${it.path}:build" }
+}

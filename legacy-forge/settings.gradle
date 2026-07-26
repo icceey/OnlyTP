@@ -1,0 +1,13 @@
+pluginManagement {
+    repositories {
+        gradlePluginPortal()
+        maven {
+            name = 'MinecraftForge'
+            url = 'https://maven.minecraftforge.net/'
+        }
+    }
+}
+
+rootProject.name = 'OnlyTP-Legacy-Forge'
+
+include 'forge-1.18.2', 'forge-1.19.2', 'forge-1.20.1'
