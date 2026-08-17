@@ -63,7 +63,7 @@ public final class MinecraftCompatImpl implements MinecraftCompat {
     }
 
     @Override
-    public Component translatableWithFallback(String key, Object... args) {
+    public Component translatableWithFallback(ServerPlayer recipient, String key, Object... args) {
         String serverText = Component.translatable(key).getString();
         return Component.translatableWithFallback(key, serverText, args);
     }

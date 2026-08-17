@@ -22,7 +22,7 @@ public interface MinecraftCompat {
 
     void startRiding(ServerPlayer player, Entity vehicle);
 
-    Component translatableWithFallback(String key, Object... args);
+    Component translatableWithFallback(ServerPlayer recipient, String key, Object... args);
 
     void sendSuccess(CommandSourceStack source, Component message, boolean broadcastToAdmins);
 
