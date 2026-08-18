@@ -138,7 +138,7 @@ public class TeleportCommand {
                         "commands.onlytp.success",
                         targetPlayer.getScoreboardName()
                 ),
-                true
+                false
         );
 
         // 通知目标玩家有人传送到了他那里

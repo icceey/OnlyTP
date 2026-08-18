@@ -156,6 +156,8 @@ feature change:
 - Teleport plays `SoundEvents.PORTAL_TRAVEL` at departure and destination.
 - Departure particles use `ParticleTypes.PORTAL`.
 - Destination particles use `ParticleTypes.REVERSE_PORTAL`.
+- Successful teleport feedback is sent only to the executor and is not
+  broadcast as operator command feedback.
 - If the executor is riding a `LivingEntity`, dismount, teleport the mount,
   teleport the player, then remount the returned teleported mount entity.
 - Cross-dimension mount teleporting uses the version-appropriate transition API
