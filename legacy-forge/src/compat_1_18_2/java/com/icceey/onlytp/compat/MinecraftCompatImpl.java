@@ -4,6 +4,7 @@ import net.minecraft.Util;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.TextComponent;
+import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
@@ -31,7 +32,10 @@ public final class MinecraftCompatImpl extends LegacyMinecraftCompatBase {
     }
 
     @Override
-    public Component translatableWithFallback(String key, Object... args) {
+    public Component translatableWithFallback(ServerPlayer recipient, String key, Object... args) {
+        if (recipient != null && clientHasOnlyTP(recipient)) {
+            return new TranslatableComponent(key, args);
+        }
         return new TextComponent(englishFallback(key, args));
     }
 

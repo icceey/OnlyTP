@@ -119,6 +119,38 @@ class BuildCompatibilitySourceTest {
     }
 
     @Test
+    void legacyForgeLocalizationUsesClientTranslationsWhenOnlyTpIsInstalled() throws IOException {
+        String base = Files.readString(Path.of(
+                "legacy-forge/src/main/java/com/icceey/onlytp/compat/LegacyMinecraftCompatBase.java"
+        ));
+        String forge1182 = Files.readString(Path.of(
+                "legacy-forge/src/compat_1_18_2/java/com/icceey/onlytp/compat/MinecraftCompatImpl.java"
+        ));
+        String forge1192 = Files.readString(Path.of(
+                "legacy-forge/src/compat_1_19_2/java/com/icceey/onlytp/compat/MinecraftCompatImpl.java"
+        ));
+
+        assertTrue(
+                base.contains("connection.isMemoryConnection()")
+                        && base.contains("NetworkHooks.getConnectionData(connection)")
+                        && base.contains("connectionData.getModList().contains(OnlyTPForge.MODID)"),
+                "Legacy Forge must recognize integrated clients and use handshake data for remote clients"
+        );
+        assertTrue(
+                forge1182.contains("clientHasOnlyTP(recipient)")
+                        && forge1182.contains("new TranslatableComponent(key, args)")
+                        && forge1182.contains("new TextComponent(englishFallback(key, args))"),
+                "Forge 1.18.2 must use client translations when available and readable fallback otherwise"
+        );
+        assertTrue(
+                forge1192.contains("clientHasOnlyTP(recipient)")
+                        && forge1192.contains("Component.translatable(key, args)")
+                        && forge1192.contains("Component.literal(englishFallback(key, args))"),
+                "Forge 1.19.2 must use client translations when available and readable fallback otherwise"
+        );
+    }
+
+    @Test
     void fabricRunDirectoriesResolveToTheRootRunDirectory() throws IOException {
         String fabricBuild = Files.readString(Path.of("fabric/build.gradle"));
 

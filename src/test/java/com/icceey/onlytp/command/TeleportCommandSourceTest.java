@@ -74,6 +74,21 @@ class TeleportCommandSourceTest {
     }
 
     @Test
+    void successFeedbackIsNotBroadcastToOperators() throws IOException {
+        String commandSource = Files.readString(Path.of(
+                "common/src/main/java/com/icceey/onlytp/command/TeleportCommand.java"
+        ));
+
+        assertTrue(
+                commandSource.matches(
+                        "(?s).*COMPAT\\.sendSuccess\\(\\s*source,"
+                                + "\\s*COMPAT\\.translatableWithFallback\\(.*?\\),\\s*false\\s*\\);.*"
+                ),
+                "Teleport success feedback must only be sent to the executor"
+        );
+    }
+
+    @Test
     void loaderApisStayOutsideCommonSources() throws IOException {
         String commonSources;
         try (Stream<Path> sources = readJavaSources(Path.of("common/src"))) {

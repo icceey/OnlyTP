@@ -49,7 +49,7 @@ public class TeleportCommand {
 
         // 确保命令执行者是玩家
         if (!(source.getEntity() instanceof ServerPlayer executor)) {
-            source.sendFailure(COMPAT.translatableWithFallback("commands.onlytp.only_player"));
+            source.sendFailure(COMPAT.translatableWithFallback(null, "commands.onlytp.only_player"));
             return 0;
         }
 
@@ -59,19 +59,19 @@ public class TeleportCommand {
         // 检查是否尝试传送到自己
         if (executor.equals(targetPlayer) && !COMPAT.hasPermissionLevel(source, executor, 2)) {
             // 如果没有作弊权限，禁止原地TP
-            source.sendFailure(COMPAT.translatableWithFallback("commands.onlytp.no_self_tp"));
+            source.sendFailure(COMPAT.translatableWithFallback(executor, "commands.onlytp.no_self_tp"));
             return 0;
         }
 
         // 检查目标玩家是否在线并且存活
         if (!targetPlayer.isAlive() || targetPlayer.hasDisconnected()) {
-            source.sendFailure(COMPAT.translatableWithFallback("commands.onlytp.target_dead_offline"));
+            source.sendFailure(COMPAT.translatableWithFallback(executor, "commands.onlytp.target_dead_offline"));
             return 0;
         }
 
         // 检查当前玩家是否在线并且存活
         if (!executor.isAlive() || executor.hasDisconnected()) {
-            source.sendFailure(COMPAT.translatableWithFallback("commands.onlytp.executor_dead_offline"));
+            source.sendFailure(COMPAT.translatableWithFallback(executor, "commands.onlytp.executor_dead_offline"));
             return 0;
         }
 
@@ -133,14 +133,22 @@ public class TeleportCommand {
         // 发送成功消息
         COMPAT.sendSuccess(
                 source,
-                COMPAT.translatableWithFallback("commands.onlytp.success", targetPlayer.getScoreboardName()),
-                true
+                COMPAT.translatableWithFallback(
+                        executor,
+                        "commands.onlytp.success",
+                        targetPlayer.getScoreboardName()
+                ),
+                false
         );
 
         // 通知目标玩家有人传送到了他那里
         COMPAT.sendSystemMessage(
                 targetPlayer,
-                COMPAT.translatableWithFallback("commands.onlytp.notify_target", executor.getScoreboardName())
+                COMPAT.translatableWithFallback(
+                        targetPlayer,
+                        "commands.onlytp.notify_target",
+                        executor.getScoreboardName()
+                )
         );
 
         // 在目的地播放下界传送门音效

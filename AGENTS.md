@@ -156,6 +156,8 @@ feature change:
 - Teleport plays `SoundEvents.PORTAL_TRAVEL` at departure and destination.
 - Departure particles use `ParticleTypes.PORTAL`.
 - Destination particles use `ParticleTypes.REVERSE_PORTAL`.
+- Successful teleport feedback is sent only to the executor and is not
+  broadcast as operator command feedback.
 - If the executor is riding a `LivingEntity`, dismount, teleport the mount,
   teleport the player, then remount the returned teleported mount entity.
 - Cross-dimension mount teleporting uses the version-appropriate transition API
@@ -168,7 +170,8 @@ All player-facing messages use translation keys under `commands.onlytp.*`.
 `MinecraftCompat.translatableWithFallback()` keeps server-only installs
 readable when the client lacks this mod's lang files. Minecraft 1.18.2 and
 1.19.2 do not have the newer component fallback API, so their compatibility
-implementations send the English fallback text directly.
+implementations use Forge handshake data: clients with OnlyTP receive the
+translation key, while clients without it receive the English fallback text.
 
 When adding or changing a message key, update every language file in:
 

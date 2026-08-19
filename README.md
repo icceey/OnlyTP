@@ -32,7 +32,7 @@ This mod is not recommended for competitive PvP servers as it may provide tactic
 - **Dependencies**: Fabric builds require Fabric API; Forge and NeoForge builds have no additional mod dependency
 - **Installation**: Server-side required, client-side optional
   - Install on client for localized messages
-  - Server-only installation keeps messages readable; Forge 1.18.2 and 1.19.2 use English fallback text
+  - Server-only installation keeps messages readable; Forge 1.18.2 and 1.19.2 use client translations when OnlyTP is installed and English fallback otherwise
 
 ## 🛠️ Development
 

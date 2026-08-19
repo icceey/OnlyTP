@@ -29,7 +29,10 @@ public final class MinecraftCompatImpl extends LegacyMinecraftCompatBase {
     }
 
     @Override
-    public Component translatableWithFallback(String key, Object... args) {
+    public Component translatableWithFallback(ServerPlayer recipient, String key, Object... args) {
+        if (recipient != null && clientHasOnlyTP(recipient)) {
+            return Component.translatable(key, args);
+        }
         return Component.literal(englishFallback(key, args));
     }
 
