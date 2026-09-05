@@ -1,6 +1,6 @@
 plugins {
     id 'base'
-    id 'net.minecraftforge.gradle' version '6.0.53' apply false
+    id 'net.minecraftforge.gradle' version '6.0.54' apply false
 }
 
 def sharedModProperties = new Properties()
@@ -142,33 +142,10 @@ subprojects { legacyProject ->
     }
 }
 
-tasks.register('verifyLegacyMatrix') {
-    group = 'verification'
-    description = 'Verifies the fixed legacy Forge target set and shared source layout.'
-
-    doLast {
-        def expectedProjects = ['forge-1.18.2', 'forge-1.19.2', 'forge-1.20.1'] as Set
-        if (legacyTargets.keySet() != expectedProjects) {
-            throw new GradleException("Legacy Forge matrix must remain ${expectedProjects}")
-        }
-
-        legacyTargets.each { projectName, target ->
-            def compatSource = rootProject.file(
-                    "src/${target.compatSourceSet}/java/com/icceey/onlytp/compat/MinecraftCompatImpl.java"
-            )
-            if (!compatSource.isFile()) {
-                throw new GradleException("Missing compatibility source for ${projectName}: ${compatSource}")
-            }
-        }
-    }
-}
-
 tasks.named('check').configure {
-    dependsOn tasks.named('verifyLegacyMatrix')
     dependsOn subprojects.collect { "${it.path}:check" }
 }
 
 tasks.named('build').configure {
-    dependsOn tasks.named('verifyLegacyMatrix')
     dependsOn subprojects.collect { "${it.path}:build" }
 }

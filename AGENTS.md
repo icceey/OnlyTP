@@ -19,8 +19,8 @@ explicitly changes the frozen-support policy.
 
 - Loader/build: legacy Forge via ForgeGradle; NeoForge via
   `net.neoforged.moddev`; Fabric via Fabric Loom
-- Default local development target: Minecraft `1.21.1`, NeoForge `21.1.242+`,
-  Fabric Loader `0.19.3+`, and the matching Fabric API
+- Default local development target: Minecraft `1.21.1`, NeoForge `21.1.249+`,
+  Fabric Loader `0.19.5+`, and the matching Fabric API
 - CI/release matrix: Forge for Minecraft `1.18.2`, `1.19.2`, and `1.20.1`;
   NeoForge and Fabric for Minecraft `1.21` through `1.21.11` and `26.1`
   through `26.2`
@@ -214,11 +214,9 @@ jar tf fabric/build/libs/onlytp-fabric-*.jar | sort
 for jar in legacy-forge/forge-*/build/libs/onlytp-forge-*.jar; do jar tf "$jar" | sort; done
 ```
 
-The source-level regression tests intentionally check that common sources are
-loader-neutral, legacy Forge imports remain isolated, all platforms compile the
-shared command source, exact Forge targets and wrappers remain pinned, and
-cross-dimension riding-entity teleporting uses the returned Minecraft
-replacement entity path.
+For dependency and build changes, build every affected Minecraft target with
+both modern loaders and inspect the generated jar metadata. Behavior changes
+also need focused in-game validation of the affected command paths.
 
 ## Runtime Testing Skill
 

@@ -16,8 +16,8 @@ jobs:
             parchment_minecraft: "1.21"
             parchment_mappings: "2024.11.10"
           - minecraft: "1.21.1"
-            neoforge: "21.1.242"
-            fabric_api: "0.116.14+1.21.1"
+            neoforge: "21.1.249"
+            fabric_api: "0.116.17+1.21.1"
             java: "21"
             parchment_minecraft: "1.21.1"
             parchment_mappings: "2024.11.17"
@@ -76,8 +76,8 @@ jobs:
             parchment_minecraft: "1.21.10"
             parchment_mappings: "2025.10.12"
           - minecraft: "1.21.11"
-            neoforge: "21.11.44"
-            fabric_api: "0.141.5+1.21.11"
+            neoforge: "21.11.45"
+            fabric_api: "0.141.6+1.21.11"
             java: "21"
             parchment_minecraft: "1.21.11"
             parchment_mappings: "2025.12.20"
@@ -94,14 +94,14 @@ jobs:
             parchment_minecraft: ""
             parchment_mappings: ""
           - minecraft: "26.1.2"
-            neoforge: "26.1.2.84"
+            neoforge: "26.1.2.103"
             fabric_api: "0.155.2+26.1.2"
             java: "25"
             parchment_minecraft: ""
             parchment_mappings: ""
           - minecraft: "26.2"
-            neoforge: "26.2.0.59"
-            fabric_api: "0.157.0+26.2"
+            neoforge: "26.2.0.76"
+            fabric_api: "0.159.0+26.2"
             java: "25"
             parchment_minecraft: ""
             parchment_mappings: ""
@@ -127,7 +127,6 @@ jobs:
           -Pminecraft_version=${{ matrix.minecraft }}
           -Pminecraft_version_range='[${{ matrix.minecraft }}]'
           -Pneo_version=${{ matrix.neoforge }}
-          -Pfabric_loader_version=0.19.3
           -Pfabric_api_version=${{ matrix.fabric_api }}
           -Pparchment_minecraft_version=${{ matrix.parchment_minecraft }}
           -Pparchment_mappings_version=${{ matrix.parchment_mappings }}

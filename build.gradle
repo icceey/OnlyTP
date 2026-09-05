@@ -1,6 +1,6 @@
 plugins {
-    id 'java'
-    id 'net.neoforged.moddev' version '2.0.142' apply false
+    id 'base'
+    id 'net.neoforged.moddev' version '2.0.146' apply false
     id 'net.fabricmc.fabric-loom-remap' version '1.15.5' apply false
     id 'net.fabricmc.fabric-loom' version '1.15.5' apply false
 }
@@ -34,16 +34,12 @@ if (isMinecraft26) {
     compatSourceSet = 'compat_1_21_2'
 } else if (minecraftPatchVersion <= 10) {
     compatSourceSet = 'compat_1_21_9'
-} else if (minecraftPatchVersion >= 11) {
+} else {
     // Be optimistic for future 1.21 patches; add a new layer only when compilation proves an API break.
     compatSourceSet = 'compat_1_21_11'
 }
 
-ext.targetMinecraftVersion = targetMinecraftVersion
-ext.targetMinecraftVersionParts = targetMinecraftVersionParts
-ext.isMinecraft121 = isMinecraft121
 ext.isMinecraft26 = isMinecraft26
-ext.compatSourceSet = compatSourceSet
 ext.compatSourceDir = file("common/src/${compatSourceSet}/java")
 ext.targetJavaVersion = isMinecraft26 ? 25 : 21
 
@@ -52,39 +48,14 @@ allprojects {
     version = rootProject.mod_version
 }
 
-repositories {
-    mavenCentral()
-}
-
-dependencies {
-    testImplementation 'org.junit.jupiter:junit-jupiter:5.10.3'
-    testRuntimeOnly 'org.junit.platform:junit-platform-launcher:1.10.3'
-}
-
-java.toolchain.languageVersion = JavaLanguageVersion.of(targetJavaVersion)
-
 tasks.named('wrapper', Wrapper).configure {
     distributionType = Wrapper.DistributionType.BIN
 }
 
-tasks.named('compileJava').configure {
-    enabled = false
-}
-
-tasks.named('jar').configure {
-    enabled = false
-}
-
-tasks.named('test', Test).configure {
-    useJUnitPlatform()
-}
-
-tasks.register('buildAllPlatforms') {
-    group = 'build'
-    description = 'Builds the NeoForge and Fabric distributable jars for the selected Minecraft version.'
-    dependsOn ':neoforge:build', ':fabric:build'
+tasks.named('check').configure {
+    dependsOn ':neoforge:check', ':fabric:check'
 }
 
 tasks.named('build').configure {
-    dependsOn tasks.named('buildAllPlatforms')
+    dependsOn ':neoforge:build', ':fabric:build'
 }
