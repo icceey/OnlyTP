@@ -19,7 +19,7 @@ jobs:
             parchment_minecraft: "1.21"
             parchment_mappings: "2024.11.10"
           - minecraft: "1.21.1"
-            neoforge: "21.1.249"
+            neoforge: "21.1.251"
             fabric_api: "0.116.17+1.21.1"
             java: "21"
             parchment_minecraft: "1.21.1"
@@ -97,14 +97,14 @@ jobs:
             parchment_minecraft: ""
             parchment_mappings: ""
           - minecraft: "26.1.2"
-            neoforge: "26.1.2.103"
-            fabric_api: "0.155.2+26.1.2"
+            neoforge: "26.1.2.109"
+            fabric_api: "0.155.3+26.1.2"
             java: "25"
             parchment_minecraft: ""
             parchment_mappings: ""
           - minecraft: "26.2"
-            neoforge: "26.2.0.76"
-            fabric_api: "0.159.0+26.2"
+            neoforge: "26.2.0.88"
+            fabric_api: "0.161.0+26.2"
             java: "25"
             parchment_minecraft: ""
             parchment_mappings: ""
@@ -114,7 +114,7 @@ jobs:
       uses: actions/checkout@v7
 
     - name: Set up JDK ${{ matrix.java }}
-      uses: actions/setup-java@v6.0.0
+      uses: actions/setup-java@v6.0.1
       with:
         java-version: ${{ matrix.java }}
         distribution: 'temurin'
@@ -151,7 +151,7 @@ jobs:
       uses: actions/checkout@v7
 
     - name: Set up JDK 17
-      uses: actions/setup-java@v6.0.0
+      uses: actions/setup-java@v6.0.1
       with:
         java-version: "17"
         distribution: "temurin"
