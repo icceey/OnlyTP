@@ -108,6 +108,12 @@ jobs:
             java: "25"
             parchment_minecraft: ""
             parchment_mappings: ""
+          - minecraft: "26.3"
+            neoforge: "26.3.0.85"
+            fabric_api: "0.163.0+26.3"
+            java: "25"
+            parchment_minecraft: ""
+            parchment_mappings: ""
 
     steps:
     - name: Checkout code
@@ -194,7 +200,7 @@ jobs:
         body: |
           ## Release ${{ github.ref_name }}
           
-          This release contains frozen Forge builds for Minecraft 1.18.2, 1.19.2, and 1.20.1, plus NeoForge and Fabric builds for Minecraft 1.21 through 1.21.11 and 26.1 through 26.2.
+          This release contains frozen Forge builds for Minecraft 1.18.2, 1.19.2, and 1.20.1, plus NeoForge and Fabric builds for Minecraft 1.21 through 1.21.11 and 26.1 through 26.3.
 
           ### Installation
           1. Download the JAR file matching both your loader and Minecraft version
