@@ -26,7 +26,7 @@ OnlyTP 是一个轻量级的 Minecraft Forge、NeoForge 与 Fabric 模组，为�
 ## 🔧 兼容性
 
 - **旧版 Forge**: Minecraft 1.18.2、1.19.2 与 1.20.1；这些 Minecraft 目标版本保持冻结
-- **现代构建**: Minecraft 1.21 至 1.21.11，以及 26.1 至 26.2，支持 NeoForge 与 Fabric
+- **现代构建**: Minecraft 1.21 至 1.21.11，以及 26.1 至 26.3，支持 NeoForge 与 Fabric
 - **加载器**: 请使用同时匹配加载器与 Minecraft 版本的 jar
 - **Java**: 旧版 Forge 使用 Java 17；Minecraft 1.21.x 使用 Java 21；Minecraft 26.x 使用 Java 25
 - **依赖**: Fabric 构建需要 Fabric API；Forge 与 NeoForge 构建没有额外模组依赖

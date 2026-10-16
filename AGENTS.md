@@ -23,7 +23,7 @@ explicitly changes the frozen-support policy.
   Fabric Loader `0.19.5+`, and the matching Fabric API
 - CI/release matrix: Forge for Minecraft `1.18.2`, `1.19.2`, and `1.20.1`;
   NeoForge and Fabric for Minecraft `1.21` through `1.21.11` and `26.1`
-  through `26.2`
+  through `26.3`
 - Java: 17 for legacy Forge, 21 for Minecraft 1.21.x, and 25 for Minecraft
   26.x; `.java-version` keeps the default 1.21.1 workspace on Java 21
 - Gradle wrappers: Gradle 9.2.1 for the modern root build and Gradle 8.14.4 for

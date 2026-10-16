@@ -26,7 +26,7 @@ This mod is not recommended for competitive PvP servers as it may provide tactic
 ## 🔧 Compatibility
 
 - **Legacy Forge**: Minecraft 1.18.2, 1.19.2, and 1.20.1; these Minecraft targets are frozen
-- **Modern Builds**: Minecraft 1.21 through 1.21.11 and 26.1 through 26.2 on NeoForge or Fabric
+- **Modern Builds**: Minecraft 1.21 through 1.21.11 and 26.1 through 26.3 on NeoForge or Fabric
 - **Loader**: Use the jar matching both your loader and Minecraft version
 - **Java**: Java 17 for legacy Forge, Java 21 for Minecraft 1.21.x, and Java 25 for Minecraft 26.x
 - **Dependencies**: Fabric builds require Fabric API; Forge and NeoForge builds have no additional mod dependency
